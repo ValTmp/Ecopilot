@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot Dashboard - Your Sustainable Living Assistant</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/privacy.css">
+  <link rel="stylesheet" href="css/cookieBanner.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="logo">EcoPilot</div>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/dashboard" class="active">Dashboard</a>
+        <a href="/shop">Shop</a>
+        <a href="/profile">Profile</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="dashboard-header">
+      <h1>Your Sustainability Dashboard</h1>
+      <p>Track your eco-friendly activities and see your impact</p>
+    </section>
+
+    <div class="dashboard-grid">
+      <section class="dashboard-card co2-impact">
+        <h2>CO2 Impact</h2>
+        <div class="impact-value">
+          <span id="total-impact">0</span>
+          <span class="unit">kg</span>
+        </div>
+        <p>Total CO2 saved this month</p>
+        <div class="progress-bar">
+          <div class="progress" id="impact-progress" style="width: 0%"></div>
+        </div>
+        <p class="progress-label">50% of monthly goal</p>
+      </section>
+
+      <section class="dashboard-card activities">
+        <h2>Recent Activities</h2>
+        <ul id="activities-list">
+          <li class="activity-item">
+            <div class="activity-icon cycling"></div>
+            <div class="activity-details">
+              <h3>Cycling</h3>
+              <p>5km commute</p>
+              <span class="activity-date">Today</span>
+            </div>
+            <div class="activity-impact">+1.0 kg</div>
+          </li>
+          <li class="activity-item">
+            <div class="activity-icon recycling"></div>
+            <div class="activity-details">
+              <h3>Recycling</h3>
+              <p>10 items recycled</p>
+              <span class="activity-date">Yesterday</span>
+            </div>
+            <div class="activity-impact">+5.0 kg</div>
+          </li>
+          <li class="activity-item">
+            <div class="activity-icon vegan"></div>
+            <div class="activity-details">
+              <h3>Vegan Day</h3>
+              <p>1 day vegan diet</p>
+              <span class="activity-date">3 days ago</span>
+            </div>
+            <div class="activity-impact">+3.0 kg</div>
+          </li>
+        </ul>
+        <button id="add-activity-btn" class="btn btn-primary">Add Activity</button>
+      </section>
+
+      <section class="dashboard-card eco-tips">
+        <h2>Eco Tips</h2>
+        <div class="tip-card">
+          <h3>Reduce Water Usage</h3>
+          <p>Fix leaky faucets to save up to 10 gallons of water per day.</p>
+          <div class="tip-impact">Potential savings: 3.6 kg CO2/month</div>
+        </div>
+        <div class="tip-card">
+          <h3>Switch to LED Bulbs</h3>
+          <p>Replace incandescent bulbs with LED bulbs to save energy.</p>
+          <div class="tip-impact">Potential savings: 2.5 kg CO2/month</div>
+        </div>
+        <button id="more-tips-btn" class="btn btn-secondary">More Tips</button>
+      </section>
+
+      <section class="dashboard-card product-recommendations">
+        <h2>Recommended Products</h2>
+        <div class="product-card">
+          <div class="product-image" style="background-image: url('https://via.placeholder.com/150')"></div>
+          <div class="product-details">
+            <h3>Bamboo Straw Set</h3>
+            <p>Eco-friendly alternative to plastic straws</p>
+            <div class="product-impact">Saves 0.5 kg CO2/year</div>
+            <a href="#" class="btn btn-primary">View Product</a>
+          </div>
+        </div>
+        <div class="product-card">
+          <div class="product-image" style="background-image: url('https://via.placeholder.com/150')"></div>
+          <div class="product-details">
+            <h3>Reusable Water Bottle</h3>
+            <p>Stainless steel water bottle</p>
+            <div class="product-impact">Saves 1.2 kg CO2/year</div>
+            <a href="#" class="btn btn-primary">View Product</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Landbot Widget Container -->
+  <div id="landbot-widget"></div>
+
+  <footer>
+    <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+  </footer>
+
+  <script src="js/privacy.js"></script>
+  <script src="js/cookieBanner.js"></script>
+  <script src="js/landbot.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html> 

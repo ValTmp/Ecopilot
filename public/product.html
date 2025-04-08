@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot - Product Details</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/product.css">
+  <link rel="stylesheet" href="css/cookieBanner.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="/">EcoPilot</a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/shop">Shop</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="product-container">
+      <div class="product-gallery">
+        <div class="main-image">
+          <img id="product-image" src="" alt="Product Image">
+        </div>
+        <div class="thumbnail-list" id="thumbnail-container">
+          <!-- Thumbnails will be loaded dynamically -->
+        </div>
+      </div>
+
+      <div class="product-info">
+        <h1 id="product-name"></h1>
+        <div class="product-meta">
+          <div class="product-price" id="product-price"></div>
+          <div class="product-impact" id="product-impact"></div>
+        </div>
+        
+        <div class="product-description" id="product-description"></div>
+        
+        <div class="eco-benefits">
+          <h2>Environmental Benefits</h2>
+          <ul id="eco-benefits-list">
+            <!-- Benefits will be loaded dynamically -->
+          </ul>
+        </div>
+        
+        <div class="product-actions">
+          <div class="quantity-selector">
+            <button id="decrease-quantity">-</button>
+            <input type="number" id="quantity" value="1" min="1" max="10">
+            <button id="increase-quantity">+</button>
+          </div>
+          <button id="add-to-cart" class="btn btn-primary">Add to Cart</button>
+        </div>
+        
+        <div class="product-details">
+          <h2>Product Details</h2>
+          <div id="product-specs">
+            <!-- Specifications will be loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="related-products">
+      <h2>You May Also Like</h2>
+      <div class="products-grid" id="related-products">
+        <!-- Related products will be loaded dynamically -->
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+  </footer>
+
+  <div id="landbot-widget"></div>
+
+  <script src="js/product.js"></script>
+  <script src="js/landbot.js"></script>
+</body>
+</html> 

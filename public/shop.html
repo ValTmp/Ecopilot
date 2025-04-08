@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot - Shop</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/shop.css">
+  <link rel="stylesheet" href="css/cookieBanner.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="/">EcoPilot</a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/shop" class="active">Shop</a></li>
+        <li><a href="/profile">Profile</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="shop-header">
+      <h1>Eco-Friendly Products</h1>
+      <p>Discover sustainable products that help reduce your carbon footprint</p>
+      
+      <div class="filters">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Search products...">
+          <button id="search-button">Search</button>
+        </div>
+        
+        <div class="filter-options">
+          <select id="category-filter">
+            <option value="">All Categories</option>
+            <option value="home">Home & Living</option>
+            <option value="fashion">Fashion</option>
+            <option value="electronics">Electronics</option>
+            <option value="food">Food & Beverages</option>
+          </select>
+          
+          <select id="impact-filter">
+            <option value="">Sort by Impact</option>
+            <option value="high">Highest Impact</option>
+            <option value="low">Lowest Impact</option>
+          </select>
+          
+          <select id="price-filter">
+            <option value="">Sort by Price</option>
+            <option value="low">Lowest Price</option>
+            <option value="high">Highest Price</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="products-grid" id="products-container">
+      <!-- Products will be loaded dynamically -->
+    </section>
+
+    <div class="pagination">
+      <button id="prev-page" class="btn btn-secondary">Previous</button>
+      <span id="page-info">Page 1 of 1</span>
+      <button id="next-page" class="btn btn-secondary">Next</button>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+  </footer>
+
+  <div id="landbot-widget"></div>
+
+  <script src="js/shop.js"></script>
+  <script src="js/landbot.js"></script>
+</body>
+</html> 

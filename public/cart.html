@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Eco Pilot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/cart.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="index.html">Eco Pilot</a>
+        </div>
+        <div class="nav-links">
+            <a href="shop.html">Shop</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="profile.html">Profile</a>
+        </div>
+        <div class="nav-cart">
+            <a href="cart.html" class="cart-badge">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count hidden">0</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="cart-container">
+        <header class="cart-header">
+            <h1>Your Shopping Cart</h1>
+            <p>Review and manage your eco-friendly items</p>
+        </header>
+
+        <div class="cart-content">
+            <section class="cart-items">
+                <!-- Cart items will be dynamically inserted here -->
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart fa-3x" style="color: #ddd; margin-bottom: 1rem;"></i>
+                    <p>Your cart is empty</p>
+                    <a href="shop.html" class="continue-shopping">Continue Shopping</a>
+                </div>
+            </section>
+
+            <aside class="cart-summary">
+                <h2>Order Summary</h2>
+                <div class="summary-items">
+                    <div class="summary-item">
+                        <span>Subtotal</span>
+                        <span class="subtotal">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Shipping</span>
+                        <span class="shipping">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Tax</span>
+                        <span class="tax">$0.00</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total</span>
+                        <span class="total">$0.00</span>
+                    </div>
+                </div>
+                <button class="checkout-btn" disabled>Proceed to Checkout</button>
+                <a href="shop.html" class="continue-shopping">Continue Shopping</a>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Eco Pilot</h3>
+                <p>Making sustainable living accessible and rewarding.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="shop.html">Shop</a></li>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>Email: support@ecopilot.com</p>
+                <p>Phone: (555) 123-4567</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Eco Pilot. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/cart.js"></script>
+    <script src="js/analytics.js"></script>
+</body>
+</html> 
