@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
+const http = require('http');
 const { errorHandler } = require('./middleware/error');
 const { requestLogger } = require('./middleware/logging');
 const { 
@@ -17,12 +18,24 @@ const landbotService = require('./services/landbotService');
 // @KI-GEN-START [2025-04-06]
 // Import route modules
 const co2Routes = require('./routes/co2Routes');
+const recommendationRoutes = require('./routes/recommendationRoutes');
 // @KI-GEN-END
+// Import new routes
+const goalRoutes = require('./routes/goalRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const co2Calculator = require('./services/co2Calculator');
 const logger = require('./services/logger');
+const cronService = require('./services/cronService');
+const socketService = require('./services/socketService');
 
 // Express-App initialisieren
 const app = express();
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+socketService.initialize(server);
 
 // Basis-Middleware
 app.use(express.json({ limit: '10kb' }));
@@ -79,7 +92,13 @@ apiRouter.post('/auth/refresh-token',
 // @KI-GEN-START [2025-04-06]
 // Use CO2 routes
 apiRouter.use('/co2', co2Routes);
+// Use recommendation routes
+apiRouter.use('/recommendations', recommendationRoutes);
 // @KI-GEN-END
+
+// Goal and notification routes
+apiRouter.use('/goals', goalRoutes);
+apiRouter.use('/notifications', notificationRoutes);
 
 // Remove the old CO2 calculation endpoint
 // CO2-Berechnungen
@@ -233,10 +252,14 @@ app.use((req, res) => {
 // Error-Handler
 app.use(errorHandler);
 
+// Initialize cron jobs
+cronService.initCronJobs();
+
 // Server starten
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+  logger.info('EcoPilot service started with CO2 goals and real-time notifications enabled');
 });
 
-module.exports = app; 
+module.exports = { app, server }; 

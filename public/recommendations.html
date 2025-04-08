@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot - Carbon Reduction Recommendations</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .eco-gradient {
+      background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    }
+    .recommendation-card {
+      transition: all 0.3s ease;
+    }
+    .recommendation-card:hover {
+      transform: translateY(-5px);
+    }
+    .category-btn.active {
+      background-color: #10b981;
+      color: white;
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .impact-high {
+      background-color: #fecaca;
+    }
+    .impact-medium {
+      background-color: #fed7aa;
+    }
+    .impact-low {
+      background-color: #d9f99d;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="eco-gradient text-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1 class="text-2xl font-bold">EcoPilot</h1>
+      </div>
+      <div class="flex space-x-2">
+        <a href="/index.html" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          Calculator
+        </a>
+        <a href="/dashboard.html" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          Dashboard
+        </a>
+        <a href="/offset.html" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          Offset
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Carbon Reduction Recommendations</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto">Practical actions you can take to reduce your carbon footprint and live more sustainably.</p>
+    </header>
+
+    <!-- User ID and Personal Recommendations -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">Get Personalized Recommendations</h3>
+      
+      <div class="flex flex-col md:flex-row md:items-end gap-4">
+        <div class="flex-grow">
+          <label for="recommendUserId" class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+          <input type="text" id="recommendUserId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Enter your user ID">
+        </div>
+        <div>
+          <button id="getPersonalRecsBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+            Get Personalized Tips
+          </button>
+        </div>
+      </div>
+      
+      <!-- Personal recommendations result -->
+      <div id="personalRecommendations" class="mt-6 bg-green-50 rounded-md p-4 hidden">
+        <h4 class="font-medium text-green-800 mb-2">Your Personalized Recommendations</h4>
+        <p class="text-gray-700 mb-4" id="personalRecommendationIntro">Based on your travel patterns, here are some suggestions that could help you reduce your carbon footprint:</p>
+        <ul id="personalRecommendationsList" class="list-disc pl-5 space-y-2 text-gray-700">
+          <!-- Dynamically populated -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3">Filter by Category:</h3>
+      <div class="flex flex-wrap gap-2">
+        <button class="category-btn active px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-green-500 hover:text-white transition" data-category="all">
+          All
+        </button>
+        <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-green-500 hover:text-white transition" data-category="transportation">
+          Transportation
+        </button>
+        <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-green-500 hover:text-white transition" data-category="home">
+          Home & Energy
+        </button>
+        <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-green-500 hover:text-white transition" data-category="food">
+          Food & Diet
+        </button>
+        <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-green-500 hover:text-white transition" data-category="lifestyle">
+          Lifestyle
+        </button>
+      </div>
+    </div>
+
+    <!-- Impact Filters -->
+    <div class="mb-8">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3">Filter by Impact Level:</h3>
+      <div class="flex flex-wrap gap-2">
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <input type="checkbox" class="impact-filter form-checkbox h-5 w-5 text-green-600" value="high" checked>
+          <span class="px-2 py-0.5 rounded-full text-red-800 bg-red-100">High Impact</span>
+        </label>
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <input type="checkbox" class="impact-filter form-checkbox h-5 w-5 text-green-600" value="medium" checked>
+          <span class="px-2 py-0.5 rounded-full text-orange-800 bg-orange-100">Medium Impact</span>
+        </label>
+        <label class="flex items-center space-x-2 cursor-pointer">
+          <input type="checkbox" class="impact-filter form-checkbox h-5 w-5 text-green-600" value="low" checked>
+          <span class="px-2 py-0.5 rounded-full text-green-800 bg-green-100">Low Impact</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Recommendations Grid -->
+    <div id="recommendationsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Transportation Recommendations -->
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="transportation" data-impact="high">
+        <div class="h-3 impact-high"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Switch to Public Transport</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">High Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Using public transportation instead of driving alone can reduce your carbon emissions by up to 45% per passenger mile.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Check local transit options and schedules</li>
+              <li>Consider getting a monthly transit pass</li>
+              <li>Use transit planning apps to optimize your route</li>
+              <li>Combine public transit with walking or biking for short distances</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="transportation" data-impact="high">
+        <div class="h-3 impact-high"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Switch to an Electric Vehicle</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">High Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Electric vehicles produce zero direct emissions. Even when accounting for electricity generation, they produce far less CO2 than conventional vehicles.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Research EV models that fit your budget and needs</li>
+              <li>Check for government incentives and tax credits</li>
+              <li>Consider total cost of ownership, including savings on fuel and maintenance</li>
+              <li>Identify charging options at home and in your community</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="transportation" data-impact="medium">
+        <div class="h-3 impact-medium"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Carpool to Work or School</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">Medium Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Sharing rides with colleagues or classmates can cut your transportation emissions by 50-75% depending on the number of passengers.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Ask colleagues who live nearby about carpooling</li>
+              <li>Use carpooling apps to find potential ride-share partners</li>
+              <li>Set a regular schedule that works for everyone</li>
+              <li>Share fuel and parking costs equitably</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home & Energy Recommendations -->
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="home" data-impact="high">
+        <div class="h-3 impact-high"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Switch to Renewable Energy</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">High Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Switching your home to renewable electricity can reduce your carbon footprint by 1.5-2 tons of CO2 per year for the average household.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Check if your utility company offers renewable energy options</li>
+              <li>Consider community solar programs if available</li>
+              <li>Look into installing solar panels on your property</li>
+              <li>Research renewable energy certificates (RECs)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="home" data-impact="medium">
+        <div class="h-3 impact-medium"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Improve Home Insulation</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">Medium Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Proper insulation can reduce heating and cooling needs by 20-30%, saving energy and reducing emissions from your home.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Identify and seal air leaks around windows, doors, and outlets</li>
+              <li>Add insulation to your attic, walls, and basement</li>
+              <li>Install weather stripping on doors and windows</li>
+              <li>Consider a home energy audit to identify improvement areas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="home" data-impact="low">
+        <div class="h-3 impact-low"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Use LED Light Bulbs</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Low Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">LED bulbs use up to 90% less energy than incandescent bulbs and last much longer, reducing both energy use and waste.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Replace bulbs as they burn out with LED alternatives</li>
+              <li>Choose the right brightness (lumens) and color temperature</li>
+              <li>Look for ENERGY STAR certified LED bulbs</li>
+              <li>Consider smart LEDs that can be programmed to save more energy</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Food & Diet Recommendations -->
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="food" data-impact="high">
+        <div class="h-3 impact-high"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Reduce Meat Consumption</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">High Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">A plant-rich diet can reduce your food-related carbon footprint by up to 70%. Beef production alone generates 20 times more emissions than beans per gram of protein.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Start with Meatless Mondays or one meat-free day per week</li>
+              <li>Gradually increase plant-based meals in your diet</li>
+              <li>Explore plant-based protein sources like beans, lentils, and tofu</li>
+              <li>Try meat alternatives and plant-based recipes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="food" data-impact="medium">
+        <div class="h-3 impact-medium"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Buy Local and Seasonal Food</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">Medium Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Local foods travel shorter distances, reducing transportation emissions. Seasonal foods generally require less energy-intensive growing methods.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Shop at farmers markets or join a CSA (Community Supported Agriculture)</li>
+              <li>Learn what foods are in season in your area</li>
+              <li>Read labels to check origin of foods at grocery stores</li>
+              <li>Grow some of your own vegetables and herbs if possible</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="food" data-impact="low">
+        <div class="h-3 impact-low"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Reduce Food Waste</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Low Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">About one-third of all food produced globally is wasted. Reducing food waste means less emissions from production, transportation, and decomposition in landfills.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Plan meals and make a shopping list to avoid overbuying</li>
+              <li>Store food properly to extend freshness</li>
+              <li>Use leftovers creatively in new meals</li>
+              <li>Compost food scraps instead of sending them to landfill</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lifestyle Recommendations -->
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="lifestyle" data-impact="medium">
+        <div class="h-3 impact-medium"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Buy Less, Choose Well</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-orange-100 text-orange-800 rounded-full">Medium Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Every product has a carbon footprint. Reducing consumption and choosing durable, quality items reduces manufacturing and shipping emissions.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Ask yourself if you really need something before buying</li>
+              <li>Research product durability and company sustainability practices</li>
+              <li>Choose items with minimal packaging or packaging-free options</li>
+              <li>Repair items when possible rather than replacing them</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="lifestyle" data-impact="low">
+        <div class="h-3 impact-low"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Offset Your Unavoidable Emissions</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Low Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Carbon offsets fund projects that reduce emissions elsewhere, like renewable energy or reforestation, to compensate for emissions you can't eliminate.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Calculate your carbon footprint using our calculator</li>
+              <li>Purchase offsets from reputable projects with verification</li>
+              <li>Prioritize reducing emissions first, then offset what remains</li>
+              <li><a href="/offset.html" class="text-green-600 hover:underline">Use our offset tool</a> to balance your carbon footprint</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="recommendation-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300" data-category="lifestyle" data-impact="high">
+        <div class="h-3 impact-high"></div>
+        <div class="p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="text-lg font-bold text-gray-900">Take Fewer Flights</h4>
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded-full">High Impact</span>
+          </div>
+          <p class="text-gray-600 mb-4">Air travel is one of the most carbon-intensive activities. A single long-haul flight can add 1-3 tons of CO2 to your carbon footprint.</p>
+          <div class="border-t border-gray-200 pt-4">
+            <h5 class="font-medium text-gray-800 mb-2">How to implement:</h5>
+            <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">
+              <li>Consider train or bus options for shorter trips</li>
+              <li>Combine business or leisure trips to reduce total flights</li>
+              <li>Use video conferencing instead of traveling for meetings when possible</li>
+              <li>Choose direct flights which typically use less fuel than connecting flights</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white py-6 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+        </div>
+        <div>
+          <a href="/docs/co2-api.md" class="text-green-400 hover:text-green-300 mr-4">API Documentation</a>
+          <a href="https://github.com/ValTmp/EcoPilot" class="text-green-400 hover:text-green-300">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Store the last used userId in localStorage
+    if (localStorage.getItem('ecopilot_userId')) {
+      document.getElementById('recommendUserId').value = localStorage.getItem('ecopilot_userId');
+    }
+    
+    // DOM Loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Category filter buttons
+      const categoryButtons = document.querySelectorAll('.category-btn');
+      categoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          // Set active state visually
+          categoryButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          
+          // Filter recommendations
+          filterRecommendations();
+        });
+      });
+      
+      // Impact filter checkboxes
+      const impactFilters = document.querySelectorAll('.impact-filter');
+      impactFilters.forEach(filter => {
+        filter.addEventListener('change', filterRecommendations);
+      });
+      
+      // Personal recommendations button
+      document.getElementById('getPersonalRecsBtn').addEventListener('click', () => {
+        const userId = document.getElementById('recommendUserId').value.trim();
+        
+        if (!userId) {
+          alert('Please enter a User ID');
+          return;
+        }
+        
+        localStorage.setItem('ecopilot_userId', userId);
+        getPersonalizedRecommendations(userId);
+      });
+    });
+    
+    // Filter recommendations based on selected category and impact
+    function filterRecommendations() {
+      // Get selected category
+      const selectedCategory = document.querySelector('.category-btn.active').dataset.category;
+      
+      // Get selected impact levels
+      const selectedImpacts = [];
+      document.querySelectorAll('.impact-filter:checked').forEach(checkbox => {
+        selectedImpacts.push(checkbox.value);
+      });
+      
+      // Filter cards
+      const cards = document.querySelectorAll('.recommendation-card');
+      cards.forEach(card => {
+        const cardCategory = card.dataset.category;
+        const cardImpact = card.dataset.impact;
+        
+        let showCard = (selectedCategory === 'all' || cardCategory === selectedCategory) && 
+                       selectedImpacts.includes(cardImpact);
+                       
+        if (showCard) {
+          card.classList.remove('hidden');
+          card.classList.add('fade-in');
+        } else {
+          card.classList.add('hidden');
+          card.classList.remove('fade-in');
+        }
+      });
+    }
+    
+    // Get personalized recommendations
+    async function getPersonalizedRecommendations(userId) {
+      const personalRecommendations = document.getElementById('personalRecommendations');
+      const personalRecommendationsList = document.getElementById('personalRecommendationsList');
+      
+      try {
+        // Fetch user's CO2 calculation history
+        const response = await fetch(`/api/co2/history/${userId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+        
+        const data = await response.json();
+        
+        // Generate personalized recommendations based on user data
+        const recommendations = generatePersonalizedRecommendations(data);
+        
+        // Display the recommendations
+        personalRecommendationsList.innerHTML = '';
+        recommendations.forEach(rec => {
+          const li = document.createElement('li');
+          li.textContent = rec;
+          personalRecommendationsList.appendChild(li);
+        });
+        
+        personalRecommendations.classList.remove('hidden');
+        
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
+    
+    // Generate personalized recommendations based on user data
+    function generatePersonalizedRecommendations(userData) {
+      if (!userData || !userData.data || !Array.isArray(userData.data) || userData.data.length === 0) {
+        return ["Start tracking your CO2 emissions to get personalized recommendations."];
+      }
+      
+      const recommendations = [];
+      
+      // Calculate transport type usage statistics
+      const transportStats = userData.data.reduce((stats, item) => {
+        stats.totalEntries++;
+        stats.totalEmissions += item.co2Impact;
+        
+        if (!stats.byType[item.transportType]) {
+          stats.byType[item.transportType] = {
+            count: 0,
+            emissions: 0,
+            totalDistance: 0
+          };
+        }
+        
+        stats.byType[item.transportType].count++;
+        stats.byType[item.transportType].emissions += item.co2Impact;
+        stats.byType[item.transportType].totalDistance += item.distance;
+        
+        return stats;
+      }, { 
+        totalEntries: 0, 
+        totalEmissions: 0, 
+        byType: {} 
+      });
+      
+      // Find the most used transport type
+      let mostUsedType = null;
+      let mostUsedCount = 0;
+      
+      for (const [type, data] of Object.entries(transportStats.byType)) {
+        if (data.count > mostUsedCount) {
+          mostUsedCount = data.count;
+          mostUsedType = type;
+        }
+      }
+      
+      // Add recommendations based on analysis
+      if (mostUsedType === 'car') {
+        recommendations.push("Consider carpooling for your regular car trips to reduce per-person emissions.");
+        recommendations.push("For short trips under 2 miles, walking or cycling could replace car usage.");
+        recommendations.push("Look into electric or hybrid vehicle options for your next car purchase.");
+      } else if (mostUsedType === 'plane') {
+        recommendations.push("Consider taking direct flights when possible, as takeoffs and landings use the most fuel.");
+        recommendations.push("For shorter trips, consider alternative transportation like train or bus.");
+        recommendations.push("Offset the emissions from your flights using our offset tool.");
+      } else if (mostUsedType === 'public_transport') {
+        recommendations.push("Great job using public transportation! Consider walking or cycling for the first/last mile.");
+        recommendations.push("Share your commitment to public transit with friends and colleagues to encourage others.");
+      }
+      
+      // General recommendations based on total emissions
+      if (transportStats.totalEmissions > 1000) {
+        recommendations.push("Your emissions are above average. Consider setting a monthly carbon budget to track and reduce over time.");
+      }
+      
+      // Avoid empty recommendations list
+      if (recommendations.length === 0) {
+        recommendations.push("Keep tracking your emissions to receive more detailed recommendations.");
+        recommendations.push("Try our offset tool to balance your unavoidable emissions.");
+      }
+      
+      return recommendations;
+    }
+  </script>
+</body>
+</html> 

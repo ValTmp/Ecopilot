@@ -3,262 +3,523 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Profile - Eco Pilot</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/profile.css">
-  <link rel="stylesheet" href="css/cookieBanner.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <title>EcoPilot - User Profile</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .profile-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+    .profile-header {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .profile-picture {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 20px;
+    }
+    .profile-picture-container {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .form-section {
+      margin-bottom: 40px;
+    }
+    .form-section h3 {
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      color: #2c8558;
+    }
+    .alert {
+      display: none;
+    }
+    .stats-card {
+      text-align: center;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      background-color: #f8f9fa;
+      border-left: 4px solid #2c8558;
+    }
+    .stats-card h4 {
+      color: #2c8558;
+      margin-bottom: 10px;
+    }
+    .stats-card p {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <nav class="navbar">
-      <div class="logo">
-        <a href="/">EcoPilot</a>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <img src="/img/logo.png" alt="EcoPilot Logo" height="30">
+        EcoPilot
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/calculator.html">CO2 Calculator</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/goals.html">My Goals</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="/profile.html">Profile</a>
+          </li>
+        </ul>
+        <div class="navbar-nav">
+          <a class="nav-link" href="/logout" id="logoutBtn">Logout</a>
+        </div>
       </div>
-      <ul class="nav-links">
-        <li><a href="/">Home</a></li>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/shop">Shop</a></li>
-        <li><a href="/profile" class="active">Profile</a></li>
-      </ul>
-      <div class="nav-cart">
-        <a href="/cart" class="cart-badge">
-          <i class="fas fa-shopping-cart"></i>
-          <span class="cart-count hidden">0</span>
-        </a>
       </div>
     </nav>
-  </header>
 
-  <main>
+  <!-- Main Content -->
+  <div class="container profile-container">
     <div class="profile-header">
-      <h1>Your Profile</h1>
-      <p>Manage your account settings, preferences, and view your eco-impact</p>
+      <h1>My Profile</h1>
+      <p class="text-muted">Manage your account settings and view your progress</p>
     </div>
 
-    <div class="profile-container">
-      <!-- Profile Sidebar -->
-      <div class="profile-sidebar">
-        <div class="profile-avatar">
-          <img id="user-avatar" src="images/default-avatar.png" alt="User Avatar">
-          <button id="change-avatar" class="btn btn-secondary">Change Avatar</button>
+    <!-- Alerts -->
+    <div class="alert alert-success" id="successAlert" role="alert">
+      Your profile has been updated successfully!
+    </div>
+    <div class="alert alert-danger" id="errorAlert" role="alert">
+      An error occurred. Please try again.
         </div>
         
-        <div class="profile-stats">
-          <div class="stat-item">
-            <span class="stat-value" id="total-points">0</span>
-            <span class="stat-label">Eco Points</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value" id="total-impact">0</span>
-            <span class="stat-label">CO2 Saved (kg)</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value" id="member-since">-</span>
-            <span class="stat-label">Member Since</span>
+    <div class="row">
+      <div class="col-md-4">
+        <!-- Profile Picture -->
+        <div class="profile-picture-container">
+          <img src="/img/default-profile.png" alt="Profile Picture" class="profile-picture" id="profilePicture">
+          <div class="mt-3">
+            <label for="profilePictureInput" class="btn btn-outline-primary btn-sm">
+              Change Picture
+            </label>
+            <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
           </div>
         </div>
         
-        <div class="profile-menu">
-          <button class="menu-item active" data-tab="account">Account Settings</button>
-          <button class="menu-item" data-tab="preferences">Preferences</button>
-          <button class="menu-item" data-tab="orders">Order History</button>
-          <button class="menu-item" data-tab="privacy">Privacy & Data</button>
+        <!-- Stats Cards -->
+        <div class="stats-card">
+          <h4>Total CO2 Saved</h4>
+          <p id="totalCO2Saved">0 kg</p>
+        </div>
+        <div class="stats-card">
+          <h4>Active Goals</h4>
+          <p id="activeGoals">0</p>
+        </div>
+        <div class="stats-card">
+          <h4>Member Since</h4>
+          <p id="memberSince">-</p>
         </div>
       </div>
       
-      <!-- Profile Content -->
-      <div class="profile-content">
-        <!-- Account Settings Tab -->
-        <div id="account-tab" class="tab-content active">
-          <h2>Account Settings</h2>
-          <form id="account-form">
-            <div class="form-group">
-              <label for="name">Full Name</label>
-              <input type="text" id="name" name="name" required>
+      <div class="col-md-8">
+        <!-- Profile Information Form -->
+        <form id="profileForm">
+          <div class="form-section">
+            <h3>Personal Information</h3>
+            <div class="mb-3">
+              <label for="nameInput" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="nameInput" required>
+            </div>
+            <div class="mb-3">
+              <label for="emailInput" class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="emailInput" required>
+            </div>
+            <div class="mb-3">
+              <label for="phoneInput" class="form-label">Phone Number (optional)</label>
+              <input type="tel" class="form-control" id="phoneInput">
+            </div>
+            <div class="mb-3">
+              <label for="locationInput" class="form-label">Location (optional)</label>
+              <input type="text" class="form-control" id="locationInput">
+            </div>
             </div>
             
-            <div class="form-group">
-              <label for="email">Email Address</label>
-              <input type="email" id="email" name="email" required>
+          <div class="form-section">
+            <h3>Account Security</h3>
+            <div class="mb-3">
+              <label for="currentPasswordInput" class="form-label">Current Password</label>
+              <input type="password" class="form-control" id="currentPasswordInput">
+              <div class="form-text">Required to change password</div>
             </div>
-            
-            <div class="form-group">
-              <label for="phone">Phone Number</label>
-              <input type="tel" id="phone" name="phone">
+            <div class="mb-3">
+              <label for="newPasswordInput" class="form-label">New Password</label>
+              <input type="password" class="form-control" id="newPasswordInput">
             </div>
-            
-            <div class="form-group">
-              <label for="location">Location</label>
-              <input type="text" id="location" name="location">
+            <div class="mb-3">
+              <label for="confirmPasswordInput" class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirmPasswordInput">
             </div>
-            
-            <div class="form-group">
-              <label for="bio">Bio</label>
-              <textarea id="bio" name="bio" rows="4"></textarea>
-              <div class="form-help">Tell us about your eco-journey</div>
-            </div>
-            
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-            </div>
-          </form>
         </div>
         
-        <!-- Preferences Tab -->
-        <div id="preferences-tab" class="tab-content">
-          <h2>Preferences</h2>
-          <form id="preferences-form">
-            <div class="form-group">
-              <label for="language">Language</label>
-              <select id="language" name="language">
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-              </select>
+          <div class="form-section">
+            <h3>Notification Preferences</h3>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="emailNotificationsCheck" checked>
+              <label class="form-check-label" for="emailNotificationsCheck">
+                Email Notifications
+              </label>
+              <div class="form-text">Receive updates about your goals and achievements</div>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="weeklyReportsCheck" checked>
+              <label class="form-check-label" for="weeklyReportsCheck">
+                Weekly Progress Reports
+              </label>
+              <div class="form-text">Get a summary of your progress every week</div>
+            </div>
             </div>
             
-            <div class="form-group">
-              <label for="currency">Currency</label>
-              <select id="currency" name="currency">
-                <option value="usd">USD ($)</option>
-                <option value="eur">EUR (€)</option>
-                <option value="gbp">GBP (£)</option>
-              </select>
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="button" class="btn btn-outline-secondary me-md-2" id="cancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
-            
-            <div class="form-group">
-              <label for="units">Units</label>
-              <select id="units" name="units">
-                <option value="metric">Metric (kg, km)</option>
-                <option value="imperial">Imperial (lb, mi)</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label>Notifications</label>
-              <div class="checkbox-group">
-                <input type="checkbox" id="email-notifications" name="email-notifications" checked>
-                <label for="email-notifications">Email Notifications</label>
-              </div>
-              <div class="checkbox-group">
-                <input type="checkbox" id="eco-tips" name="eco-tips" checked>
-                <label for="eco-tips">Weekly Eco Tips</label>
-              </div>
-              <div class="checkbox-group">
-                <input type="checkbox" id="product-recommendations" name="product-recommendations" checked>
-                <label for="product-recommendations">Product Recommendations</label>
-              </div>
-            </div>
-            
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Save Preferences</button>
-            </div>
-          </form>
-        </div>
-        
-        <!-- Order History Tab -->
-        <div id="orders-tab" class="tab-content">
-          <h2>Order History</h2>
-          <div id="orders-container">
-            <div class="empty-state">
-              <p>You haven't placed any orders yet.</p>
-              <a href="/shop" class="btn btn-primary">Start Shopping</a>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Privacy & Data Tab -->
-        <div id="privacy-tab" class="tab-content">
-          <h2>Privacy & Data</h2>
-          <form id="privacy-form">
-            <div class="form-group">
-              <label>Privacy Settings</label>
-              <div class="checkbox-group">
-                <input type="checkbox" id="profile-visibility" name="profile-visibility" checked>
-                <label for="profile-visibility">Public Profile</label>
-              </div>
-              <div class="checkbox-group">
-                <input type="checkbox" id="activity-sharing" name="activity-sharing" checked>
-                <label for="activity-sharing">Share Activity</label>
-              </div>
-              <div class="checkbox-group">
-                <input type="checkbox" id="data-collection" name="data-collection" checked>
-                <label for="data-collection">Allow Data Collection</label>
-              </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="data-retention">Data Retention Period (days)</label>
-              <select id="data-retention" name="data-retention">
-                <option value="30">30 days</option>
-                <option value="60">60 days</option>
-                <option value="90" selected>90 days</option>
-                <option value="180">180 days</option>
-                <option value="365">1 year</option>
-              </select>
-            </div>
-            
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
-            </div>
-          </form>
-          
-          <div class="data-management">
-            <h3>Data Management</h3>
-            <p>You can export your data or delete your account at any time.</p>
-            <div class="form-actions">
-              <button id="export-data" class="btn btn-secondary">Export My Data</button>
-              <button id="delete-account" class="btn btn-danger">Delete Account</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+        </form>
 
-  <footer>
-    <div class="footer-content">
-      <div class="footer-section">
-        <h3>About EcoPilot</h3>
-        <p>Making sustainable living accessible and rewarding.</p>
+        <!-- Delete Account Section -->
+        <div class="form-section mt-5">
+          <h3 class="text-danger">Danger Zone</h3>
+          <p>Once you delete your account, there is no going back. Please be certain.</p>
+          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+            Delete Account
+          </button>
+              </div>
+              </div>
+              </div>
+            </div>
+            
+  <!-- Delete Account Modal -->
+  <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">Delete Account</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+          <div class="mb-3">
+            <label for="deleteConfirmPassword" class="form-label">Enter your password to confirm</label>
+            <input type="password" class="form-control" id="deleteConfirmPassword" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Account</button>
+              </div>
+              </div>
+              </div>
+            </div>
+            
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>EcoPilot</h5>
+          <p class="small">Helping you reduce your carbon footprint one step at a time.</p>
+            </div>
+        <div class="col-md-4">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="/" class="text-white-50">Home</a></li>
+            <li><a href="/calculator.html" class="text-white-50">CO2 Calculator</a></li>
+            <li><a href="/goals.html" class="text-white-50">Goals</a></li>
+            <li><a href="/about.html" class="text-white-50">About Us</a></li>
+          </ul>
+            </div>
+        <div class="col-md-4">
+          <h5>Contact</h5>
+          <p class="small text-white-50">
+            Email: contact@ecopilot.org<br>
+            Phone: +1 (123) 456-7890
+          </p>
+          <div class="social-links">
+            <a href="#" class="text-white me-2"><i class="fab fa-facebook"></i></a>
+            <a href="#" class="text-white me-2"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
       </div>
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <ul>
-          <li><a href="/shop">Shop</a></li>
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/profile">Profile</a></li>
-        </ul>
+      <hr class="my-3 bg-light">
+      <div class="text-center">
+        <p class="small mb-0">&copy; 2023 EcoPilot. All rights reserved.</p>
       </div>
-      <div class="footer-section">
-        <h3>Contact</h3>
-        <p>Email: support@ecopilot.com</p>
-        <p>Phone: (555) 123-4567</p>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2024 EcoPilot. All rights reserved.</p>
     </div>
   </footer>
 
-  <div id="cookie-banner" class="cookie-banner">
-    <div class="cookie-content">
-      <p>We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.</p>
-      <div class="cookie-actions">
-        <button id="accept-cookies" class="btn btn-primary">Accept</button>
-        <button id="reject-cookies" class="btn btn-secondary">Reject</button>
-        <a href="/privacy" class="btn btn-link">Learn More</a>
-      </div>
-    </div>
-  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
 
-  <div id="landbot-widget"></div>
-  
-  <script src="js/profile.js"></script>
-  <script src="js/landbot.js"></script>
-  <script src="js/cookieBanner.js"></script>
-  <script src="js/analytics.js"></script>
+      // Load user profile data
+      loadUserProfile();
+
+      // Profile form submission
+      const profileForm = document.getElementById('profileForm');
+      profileForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        updateProfile();
+      });
+
+      // Profile picture change
+      const profilePictureInput = document.getElementById('profilePictureInput');
+      profilePictureInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          uploadProfilePicture(file);
+        }
+      });
+
+      // Delete account confirmation
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      confirmDeleteBtn.addEventListener('click', function() {
+        deleteAccount();
+      });
+
+      // Cancel button
+      const cancelBtn = document.getElementById('cancelBtn');
+      cancelBtn.addEventListener('click', function() {
+        loadUserProfile(); // Reset form
+      });
+
+      // Logout button
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        logout();
+      });
+    });
+
+    async function loadUserProfile() {
+      try {
+        const response = await fetch('/api/users/profile', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load profile');
+        }
+
+        const data = await response.json();
+        
+        // Fill form fields
+        document.getElementById('nameInput').value = data.name || '';
+        document.getElementById('emailInput').value = data.email || '';
+        document.getElementById('phoneInput').value = data.phone || '';
+        document.getElementById('locationInput').value = data.location || '';
+        
+        // Update profile picture if exists
+        if (data.profilePicture) {
+          document.getElementById('profilePicture').src = data.profilePicture;
+        }
+        
+        // Update stats
+        document.getElementById('totalCO2Saved').textContent = `${data.co2Saved || 0} kg`;
+        document.getElementById('activeGoals').textContent = data.activeGoals || 0;
+        
+        // Format date for member since
+        if (data.createdAt) {
+          const date = new Date(data.createdAt);
+          document.getElementById('memberSince').textContent = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        }
+        
+        // Set notification preferences
+        document.getElementById('emailNotificationsCheck').checked = data.emailNotifications !== false;
+        document.getElementById('weeklyReportsCheck').checked = data.weeklyReports !== false;
+        
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        showError('Unable to load profile data. Please try again later.');
+      }
+    }
+
+    async function updateProfile() {
+      const name = document.getElementById('nameInput').value;
+      const email = document.getElementById('emailInput').value;
+      const phone = document.getElementById('phoneInput').value;
+      const location = document.getElementById('locationInput').value;
+      const currentPassword = document.getElementById('currentPasswordInput').value;
+      const newPassword = document.getElementById('newPasswordInput').value;
+      const confirmPassword = document.getElementById('confirmPasswordInput').value;
+      const emailNotifications = document.getElementById('emailNotificationsCheck').checked;
+      const weeklyReports = document.getElementById('weeklyReportsCheck').checked;
+      
+      // Validate passwords match if trying to change password
+      if (newPassword && newPassword !== confirmPassword) {
+        showError('New passwords do not match');
+        return;
+      }
+      
+      try {
+        const updateData = {
+          name,
+          email,
+          phone,
+          location,
+          emailNotifications,
+          weeklyReports
+        };
+        
+        // Only include password fields if trying to change password
+        if (newPassword && currentPassword) {
+          updateData.currentPassword = currentPassword;
+          updateData.newPassword = newPassword;
+        }
+        
+        const response = await fetch('/api/users/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to update profile');
+        }
+        
+        // Clear password fields
+        document.getElementById('currentPasswordInput').value = '';
+        document.getElementById('newPasswordInput').value = '';
+        document.getElementById('confirmPasswordInput').value = '';
+        
+        showSuccess('Profile updated successfully');
+        
+        // Reload profile data
+        loadUserProfile();
+        
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        showError(error.message || 'Unable to update profile. Please try again.');
+      }
+    }
+
+    async function uploadProfilePicture(file) {
+      try {
+        const formData = new FormData();
+        formData.append('profilePicture', file);
+        
+        const response = await fetch('/api/users/profile/picture', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to upload profile picture');
+        }
+        
+        const data = await response.json();
+        
+        // Update profile picture on page
+        document.getElementById('profilePicture').src = data.profilePicture;
+        
+        showSuccess('Profile picture updated successfully');
+        
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        showError('Unable to upload profile picture. Please try again.');
+      }
+    }
+
+    async function deleteAccount() {
+      const password = document.getElementById('deleteConfirmPassword').value;
+      
+      if (!password) {
+        showError('Please enter your password to confirm account deletion');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/users/profile', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ password })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to delete account');
+        }
+        
+        // Clear local storage and redirect to home
+        localStorage.removeItem('token');
+        window.location.href = '/?deleted=true';
+        
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        showError(error.message || 'Unable to delete account. Please try again.');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/login.html';
+    }
+
+    function showSuccess(message) {
+      const alert = document.getElementById('successAlert');
+      alert.textContent = message;
+      alert.style.display = 'block';
+      
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 5000);
+    }
+
+    function showError(message) {
+      const alert = document.getElementById('errorAlert');
+      alert.textContent = message;
+      alert.style.display = 'block';
+      
+      setTimeout(() => {
+        alert.style.display = 'none';
+      }, 5000);
+    }
+  </script>
 </body>
 </html> 

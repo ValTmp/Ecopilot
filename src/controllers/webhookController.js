@@ -1,6 +1,15 @@
 const { executeZapierFlow } = require('../config/zapier');
 const EcoMetrics = require('../services/analytics');
 const ComplianceService = require('../services/compliance');
+const Airtable = require('airtable');
+const Redis = require('ioredis');
+
+// Initialize Airtable
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+const table = base('CO2Calculations');
+
+// Initialize Redis
+const redis = new Redis(process.env.REDIS_URL);
 
 class WebhookController {
   static async handleLandbotWebhook(req, res) {

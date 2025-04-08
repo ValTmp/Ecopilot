@@ -4,6 +4,26 @@ const { format } = winston;
 // Log-Level basierend auf Umgebung
 const level = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
 
+// Custom levels with CO2 logging
+const customLevels = {
+  levels: {
+    error: 0,
+    warn: 1,
+    info: 2,
+    co2: 3,
+    http: 4,
+    debug: 5
+  },
+  colors: {
+    error: 'red',
+    warn: 'yellow',
+    info: 'green',
+    co2: 'cyan',
+    http: 'magenta',
+    debug: 'gray'
+  }
+};
+
 // Log-Format definieren
 const logFormat = format.combine(
   format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -12,23 +32,45 @@ const logFormat = format.combine(
   format.json()
 );
 
+// CO2 specific format
+const co2Format = format.combine(
+  format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  format.printf(({ level, message, timestamp, ...metadata }) => {
+    let msg = `${timestamp} [${level}]: ${message}`;
+    
+    if (Object.keys(metadata).length > 0) {
+      msg += ` ${JSON.stringify(metadata)}`;
+    }
+    
+    return msg;
+  })
+);
+
 // Logger konfigurieren
 const logger = winston.createLogger({
-  level,
+  levels: customLevels.levels,
   format: logFormat,
   defaultMeta: { service: 'eco-pilot' },
   transports: [
     // Konsolen-Transport für Entwicklung
     new winston.transports.Console({
-      format: format.combine(
-        format.colorize(),
-        format.simple()
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
       )
     }),
     // Datei-Transport für Fehler
     new winston.transports.File({ 
       filename: 'logs/error.log',
       level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5
+    }),
+    // Specific transport for CO2 logs
+    new winston.transports.File({ 
+      filename: 'logs/co2.log',
+      level: 'co2',
+      format: co2Format,
       maxsize: 5242880, // 5MB
       maxFiles: 5
     }),
@@ -40,6 +82,9 @@ const logger = winston.createLogger({
     })
   ]
 });
+
+// Add colors to winston
+winston.addColors(customLevels.colors);
 
 // Unbehandelte Fehler abfangen
 process.on('uncaughtException', (error) => {
@@ -57,7 +102,7 @@ const logRequest = (req, res, next) => {
   
   res.on('finish', () => {
     const duration = Date.now() - start;
-    logger.info('Request completed', {
+    logger.http('Request completed', {
       method: req.method,
       url: req.url,
       status: res.statusCode,
@@ -89,8 +134,57 @@ const logError = (error, req = null) => {
   logger.error('Error occurred:', errorLog);
 };
 
+/**
+ * Log CO2 calculation events
+ * @param {string} action - The CO2 action being performed
+ * @param {Object} data - The calculation data
+ */
+const logCO2 = (action, data) => {
+  logger.co2(`CO2 ${action}`, data);
+};
+
+/**
+ * Log CO2 calculation result
+ * @param {string} userId - User ID
+ * @param {string} transportType - Transport type
+ * @param {number} distance - Distance in km
+ * @param {number} emissions - CO2 emissions in kg
+ */
+const logCO2Calculation = (userId, transportType, distance, emissions) => {
+  logger.co2('CO2 Calculation', {
+    userId,
+    transportType,
+    distance,
+    emissions,
+    timestamp: new Date().toISOString()
+  });
+};
+
+/**
+ * Log CO2 history retrieval
+ * @param {string} userId - User ID
+ * @param {number} recordCount - Number of records retrieved
+ * @param {boolean} fromCache - Whether the data came from cache
+ */
+const logCO2History = (userId, recordCount, fromCache) => {
+  logger.co2('CO2 History Retrieved', {
+    userId,
+    recordCount,
+    fromCache,
+    timestamp: new Date().toISOString()
+  });
+};
+
 module.exports = {
-  logger,
+  error: (...args) => logger.error(...args),
+  warn: (...args) => logger.warn(...args),
+  info: (...args) => logger.info(...args),
+  co2: (...args) => logger.co2(...args),
+  http: (...args) => logger.http(...args),
+  debug: (...args) => logger.debug(...args),
   logRequest,
-  logError
+  logError,
+  logCO2,
+  logCO2Calculation,
+  logCO2History
 }; 

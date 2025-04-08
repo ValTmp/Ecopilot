@@ -3,128 +3,227 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EcoPilot Dashboard - Your Sustainable Living Assistant</title>
+  <title>EcoPilot Dashboard</title>
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/privacy.css">
-  <link rel="stylesheet" href="css/cookieBanner.css">
   <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <nav>
-      <div class="logo">EcoPilot</div>
-      <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/dashboard" class="active">Dashboard</a>
-        <a href="/shop">Shop</a>
-        <a href="/profile">Profile</a>
+  <header class="site-header">
+    <div class="container">
+      <div class="logo">
+        <img src="images/logo.svg" alt="EcoPilot Logo">
+        <h1>EcoPilot</h1>
       </div>
-    </nav>
+      <nav class="main-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="dashboard.html" class="active">Dashboard</a></li>
+          <li><a href="calculator.html">Calculator</a></li>
+          <li><a href="goals.html">Goals</a></li>
+          <li><a href="notifications.html">Notifications</a></li>
+        </ul>
+      </nav>
+      <div class="user-menu">
+        <button id="user-dropdown-toggle" class="user-dropdown-toggle">
+          <img src="images/avatar.jpg" alt="User Avatar" class="user-avatar">
+          <span class="username">John Doe</span>
+          <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M7 10l5 5 5-5z"></path>
+          </svg>
+        </button>
+        <div id="user-dropdown" class="user-dropdown">
+          <ul>
+            <li><a href="profile.html">Profile</a></li>
+            <li><a href="settings.html">Settings</a></li>
+            <li><a href="#" id="logout-btn">Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <section class="dashboard-header">
-      <h1>Your Sustainability Dashboard</h1>
-      <p>Track your eco-friendly activities and see your impact</p>
-    </section>
+  <section class="hero small-hero">
+    <div class="container">
+      <h1>Your CO₂ Dashboard</h1>
+      <p>Track your carbon footprint and make a difference</p>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="dashboard-controls">
+      <div class="time-range-selector">
+        <button class="time-btn active" data-range="week">Week</button>
+        <button class="time-btn" data-range="month">Month</button>
+        <button class="time-btn" data-range="quarter">Quarter</button>
+        <button class="time-btn" data-range="year">Year</button>
+        <button class="time-btn" data-range="custom">Custom</button>
+      </div>
+      <div class="date-selector" style="display: none;">
+        <div class="date-inputs">
+          <label for="start-date">From:</label>
+          <input type="date" id="start-date">
+          <label for="end-date">To:</label>
+          <input type="date" id="end-date">
+        </div>
+        <button class="btn btn-primary" id="apply-date-range">Apply</button>
+      </div>
+    </div>
 
     <div class="dashboard-grid">
-      <section class="dashboard-card co2-impact">
-        <h2>CO2 Impact</h2>
-        <div class="impact-value">
-          <span id="total-impact">0</span>
-          <span class="unit">kg</span>
+      <!-- CO2 Summary -->
+      <div class="dashboard-card summary-card">
+        <div class="card-header">
+          <h3>CO₂ Summary</h3>
         </div>
-        <p>Total CO2 saved this month</p>
-        <div class="progress-bar">
-          <div class="progress" id="impact-progress" style="width: 0%"></div>
-        </div>
-        <p class="progress-label">50% of monthly goal</p>
-      </section>
-
-      <section class="dashboard-card activities">
-        <h2>Recent Activities</h2>
-        <ul id="activities-list">
-          <li class="activity-item">
-            <div class="activity-icon cycling"></div>
-            <div class="activity-details">
-              <h3>Cycling</h3>
-              <p>5km commute</p>
-              <span class="activity-date">Today</span>
+        <div class="card-body">
+          <div class="summary-stats">
+            <div class="stat-item">
+              <h4>Total CO₂</h4>
+              <p class="stat-value" id="total-emissions">0 kg</p>
             </div>
-            <div class="activity-impact">+1.0 kg</div>
-          </li>
-          <li class="activity-item">
-            <div class="activity-icon recycling"></div>
-            <div class="activity-details">
-              <h3>Recycling</h3>
-              <p>10 items recycled</p>
-              <span class="activity-date">Yesterday</span>
+            <div class="stat-item">
+              <h4>Average</h4>
+              <p class="stat-value" id="average-emissions">0 kg/day</p>
             </div>
-            <div class="activity-impact">+5.0 kg</div>
-          </li>
-          <li class="activity-item">
-            <div class="activity-icon vegan"></div>
-            <div class="activity-details">
-              <h3>Vegan Day</h3>
-              <p>1 day vegan diet</p>
-              <span class="activity-date">3 days ago</span>
+            <div class="stat-item">
+              <h4>Change</h4>
+              <p class="stat-value" id="emissions-change">0%</p>
             </div>
-            <div class="activity-impact">+3.0 kg</div>
-          </li>
-        </ul>
-        <button id="add-activity-btn" class="btn btn-primary">Add Activity</button>
-      </section>
-
-      <section class="dashboard-card eco-tips">
-        <h2>Eco Tips</h2>
-        <div class="tip-card">
-          <h3>Reduce Water Usage</h3>
-          <p>Fix leaky faucets to save up to 10 gallons of water per day.</p>
-          <div class="tip-impact">Potential savings: 3.6 kg CO2/month</div>
-        </div>
-        <div class="tip-card">
-          <h3>Switch to LED Bulbs</h3>
-          <p>Replace incandescent bulbs with LED bulbs to save energy.</p>
-          <div class="tip-impact">Potential savings: 2.5 kg CO2/month</div>
-        </div>
-        <button id="more-tips-btn" class="btn btn-secondary">More Tips</button>
-      </section>
-
-      <section class="dashboard-card product-recommendations">
-        <h2>Recommended Products</h2>
-        <div class="product-card">
-          <div class="product-image" style="background-image: url('https://via.placeholder.com/150')"></div>
-          <div class="product-details">
-            <h3>Bamboo Straw Set</h3>
-            <p>Eco-friendly alternative to plastic straws</p>
-            <div class="product-impact">Saves 0.5 kg CO2/year</div>
-            <a href="#" class="btn btn-primary">View Product</a>
           </div>
         </div>
-        <div class="product-card">
-          <div class="product-image" style="background-image: url('https://via.placeholder.com/150')"></div>
-          <div class="product-details">
-            <h3>Reusable Water Bottle</h3>
-            <p>Stainless steel water bottle</p>
-            <div class="product-impact">Saves 1.2 kg CO2/year</div>
-            <a href="#" class="btn btn-primary">View Product</a>
+      </div>
+
+      <!-- Emissions Trend Chart -->
+      <div class="dashboard-card chart-card">
+        <div class="card-header">
+          <h3>Emissions Trend</h3>
+        </div>
+        <div class="card-body">
+          <canvas id="emissions-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Transport Breakdown Chart -->
+      <div class="dashboard-card chart-card">
+        <div class="card-header">
+          <h3>Transport Breakdown</h3>
+        </div>
+        <div class="card-body">
+          <canvas id="transport-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Calculations -->
+      <div class="dashboard-card table-card">
+        <div class="card-header">
+          <h3>Recent Calculations</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table class="data-table" id="recent-calculations-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Transport Type</th>
+                  <th>Distance (km)</th>
+                  <th>CO₂ Emissions (kg)</th>
+                </tr>
+              </thead>
+              <tbody id="recent-calculations-body">
+                <!-- Will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <button class="btn btn-outline" id="view-all-calculations">View All</button>
           </div>
         </div>
-      </section>
+      </div>
+
+      <!-- Goal Progress -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h3>Goal Progress</h3>
+        </div>
+        <div class="card-body">
+          <div id="goal-progress-container">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+        <div class="card-footer">
+          <a href="goals.html" class="btn btn-outline">Manage Goals</a>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h3>Recommendations</h3>
+        </div>
+        <div class="card-body">
+          <div id="recommendations-container">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
-  <!-- Landbot Widget Container -->
-  <div id="landbot-widget"></div>
-
-  <footer>
-    <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-sections">
+        <div class="footer-section">
+          <h3>EcoPilot</h3>
+          <p>Leading the way to a sustainable future by helping individuals and organizations track and reduce their carbon footprint.</p>
+          <div class="social-links">
+            <a href="#" class="social-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/></svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.78-3.89 1.09 0 2.23.19 2.23.19v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-section">
+          <h3>Company</h3>
+          <ul class="footer-links">
+            <li><a href="about.html">About Us</a></li>
+            <li><a href="team.html">Our Team</a></li>
+            <li><a href="partners.html">Partners</a></li>
+            <li><a href="careers.html">Careers</a></li>
+            <li><a href="press.html">Press Kit</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Resources</h3>
+          <ul class="footer-links">
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="guides.html">Eco Guides</a></li>
+            <li><a href="research.html">Research</a></li>
+            <li><a href="api.html">API</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Legal</h3>
+          <ul class="footer-links">
+            <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="cookies.html">Cookie Policy</a></li>
+            <li><a href="compliance.html">Compliance</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2023 EcoPilot. All rights reserved.</p>
+      </div>
+    </div>
   </footer>
 
-  <script src="js/privacy.js"></script>
-  <script src="js/cookieBanner.js"></script>
-  <script src="js/landbot.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html> 

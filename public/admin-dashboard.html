@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot Admin - Cache Monitoring Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <style>
+    .loading {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .eco-gradient {
+      background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="eco-gradient text-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1 class="text-2xl font-bold">EcoPilot Admin</h1>
+      </div>
+      <div class="flex space-x-4 items-center">
+        <a href="/" class="text-white hover:text-gray-200 transition">Home</a>
+        <a href="/co2-calculator.html" class="text-white hover:text-gray-200 transition">CO2 Calculator</a>
+        <a href="/dashboard.html" class="text-white hover:text-gray-200 transition">User Dashboard</a>
+        <div class="ml-4 flex items-center">
+          <span id="userName" class="text-white mr-3">Admin</span>
+          <button id="logoutBtn" class="px-3 py-1 bg-white text-green-600 rounded hover:bg-gray-100 transition">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <header class="bg-white shadow">
+    <div class="container mx-auto px-4 py-6">
+      <h1 class="text-3xl font-bold text-gray-900">Redis Cache Monitoring Dashboard</h1>
+      <p class="mt-2 text-gray-600">Real-time metrics and performance data for CO2 calculation services</p>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <!-- Date Range Selector -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-8">
+      <div class="flex flex-wrap items-center justify-between">
+        <div>
+          <label for="dateRange" class="block text-sm font-medium text-gray-700">Date Range</label>
+          <select id="dateRange" class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
+        </div>
+        
+        <div>
+          <label for="service" class="block text-sm font-medium text-gray-700">Service</label>
+          <select id="service" class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            <option value="co2:emission_factors">Emission Factors</option>
+            <option value="user_history">User History</option>
+            <option value="all">All Services</option>
+          </select>
+        </div>
+        
+        <button id="refreshBtn" class="mt-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white eco-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+          Refresh Data
+        </button>
+      </div>
+    </div>
+
+    <!-- Performance Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-green-100 text-green-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-5">
+            <p class="text-gray-500 text-sm">Cache Hit Rate</p>
+            <p class="text-2xl font-bold text-gray-800" id="cacheHitRate">--</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-5">
+            <p class="text-gray-500 text-sm">Avg. Response Time (Cached)</p>
+            <p class="text-2xl font-bold text-gray-800" id="avgCachedTime">--</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-5">
+            <p class="text-gray-500 text-sm">Avg. Response Time (Uncached)</p>
+            <p class="text-2xl font-bold text-gray-800" id="avgUncachedTime">--</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div class="ml-5">
+            <p class="text-gray-500 text-sm">Total Requests</p>
+            <p class="text-2xl font-bold text-gray-800" id="totalRequests">--</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cache Health Check -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-gray-800">Cache Health Status</h2>
+        <button id="checkCacheHealthBtn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white eco-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+          Run Health Check
+        </button>
+      </div>
+      
+      <div class="flex items-center mb-4">
+        <div id="cacheHealthStatus" class="w-4 h-4 rounded-full bg-gray-300 mr-2"></div>
+        <span id="cacheHealthText" class="text-gray-700">Unknown</span>
+      </div>
+      
+      <div class="grid grid-cols-2 gap-4 mt-4">
+        <div class="bg-gray-50 p-3 rounded-md">
+          <div class="text-sm text-gray-600">Response Time</div>
+          <div class="text-lg font-bold text-blue-700" id="cacheResponseTime">--</div>
+          <div class="text-xs text-gray-500">milliseconds</div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-md">
+          <div class="text-sm text-gray-600">Last Check</div>
+          <div class="text-lg font-bold text-blue-700" id="cacheLastCheck">--</div>
+          <div class="text-xs text-gray-500">time</div>
+        </div>
+      </div>
+      
+      <div id="cacheHealthError" class="mt-4 hidden">
+        <div class="bg-red-50 p-3 rounded-md border border-red-100">
+          <p class="text-red-700 text-sm" id="cacheHealthErrorMessage"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cache Hit/Miss Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Cache Hit/Miss Ratio</h2>
+      <canvas id="cacheHitMissChart" height="300"></canvas>
+    </div>
+
+    <!-- Response Time Comparison Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Response Time Comparison</h2>
+      <canvas id="responseTimeChart" height="300"></canvas>
+    </div>
+
+    <!-- Cache Performance by Service -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Cache Performance by Service</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cache Hits</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cache Misses</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hit Rate</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Response Time (Cached)</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Response Time (Uncached)</th>
+            </tr>
+          </thead>
+          <tbody id="serviceTable" class="bg-white divide-y divide-gray-200">
+            <!-- Service data will be inserted here -->
+            <tr>
+              <td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Error Metrics -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">Error Metrics</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error Type</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Count</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Occurrence</th>
+            </tr>
+          </thead>
+          <tbody id="errorTable" class="bg-white divide-y divide-gray-200">
+            <!-- Error data will be inserted here -->
+            <tr>
+              <td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Charts
+    let cacheHitMissChart;
+    let responseTimeChart;
+    
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      
+      // Initialize charts
+      initCharts();
+      
+      // Add event listeners
+      document.getElementById('refreshBtn').addEventListener('click', updateDashboard);
+      document.getElementById('dateRange').addEventListener('change', updateDashboard);
+      document.getElementById('service').addEventListener('change', updateDashboard);
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      
+      // Initial data load
+      updateDashboard();
+    });
+    
+    // Check if user is authenticated
+    function checkAuth() {
+      const token = localStorage.getItem('authToken');
+      const tokenExpiry = localStorage.getItem('tokenExpiry');
+      const userName = localStorage.getItem('userName') || 'Admin';
+      
+      // Update user name display
+      document.getElementById('userName').textContent = userName;
+      
+      // If token is missing or expired, redirect to login
+      if (!token || !tokenExpiry || new Date(tokenExpiry) <= new Date()) {
+        // Clear any existing tokens
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('tokenExpiry');
+        localStorage.removeItem('userName');
+        
+        // Redirect to login page
+        window.location.href = '/admin-login.html';
+      }
+    }
+    
+    // Logout function
+    function logout() {
+      // Clear auth data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('tokenExpiry');
+      localStorage.removeItem('userName');
+      
+      // Redirect to login page
+      window.location.href = '/admin-login.html';
+    }
+    
+    // Initialize charts
+    function initCharts() {
+      // Cache Hit/Miss Chart
+      const hitMissCtx = document.getElementById('cacheHitMissChart').getContext('2d');
+      cacheHitMissChart = new Chart(hitMissCtx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Cache Hits',
+              backgroundColor: '#10b981',
+              data: []
+            },
+            {
+              label: 'Cache Misses',
+              backgroundColor: '#ef4444',
+              data: []
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              stacked: true
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+      // Response Time Chart
+      const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+      responseTimeChart = new Chart(responseTimeCtx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Cached Response Time (ms)',
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              data: [],
+              fill: true
+            },
+            {
+              label: 'Uncached Response Time (ms)',
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              data: [],
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+    
+    // Update dashboard with data
+    async function updateDashboard() {
+      try {
+        showLoading();
+        
+        const days = document.getElementById('dateRange').value;
+        const service = document.getElementById('service').value;
+        
+        // Fetch data from API
+        const response = await fetch(`/api/monitoring/cache?days=${days}&service=${service}`, {
+          headers: {
+            'Authorization': `Bearer ${getAuthToken()}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update summary cards
+        document.getElementById('cacheHitRate').textContent = `${data.cacheHitRate}%`;
+        document.getElementById('avgCachedTime').textContent = `${data.avgCachedTime} ms`;
+        document.getElementById('avgUncachedTime').textContent = `${data.avgUncachedTime} ms`;
+        document.getElementById('totalRequests').textContent = data.totalRequests;
+        
+        // Update Cache Hit/Miss Chart
+        cacheHitMissChart.data.labels = data.dateLabels;
+        cacheHitMissChart.data.datasets[0].data = data.cacheHits;
+        cacheHitMissChart.data.datasets[1].data = data.cacheMisses;
+        cacheHitMissChart.update();
+        
+        // Update Response Time Chart
+        responseTimeChart.data.labels = data.dateLabels;
+        responseTimeChart.data.datasets[0].data = data.cachedResponseTimes;
+        responseTimeChart.data.datasets[1].data = data.uncachedResponseTimes;
+        responseTimeChart.update();
+        
+        // Update Service Table
+        updateServiceTable(data.services);
+        
+        // Update Error Table
+        updateErrorTable(data.errors);
+        
+        hideLoading();
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        showError(`Failed to load dashboard data: ${error.message}`);
+        hideLoading();
+      }
+    }
+    
+    // Update service table with data
+    function updateServiceTable(services) {
+      const serviceTable = document.getElementById('serviceTable');
+      serviceTable.innerHTML = '';
+      
+      if (services.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td colspan="6" class="px-6 py-4 text-center text-gray-500">No service data available</td>
+        `;
+        serviceTable.appendChild(row);
+        return;
+      }
+      
+      services.forEach(service => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${service.name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.hits}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.misses}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.hitRate}%</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.cachedTime} ms</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.uncachedTime} ms</td>
+        `;
+        serviceTable.appendChild(row);
+      });
+    }
+    
+    // Update error table with data
+    function updateErrorTable(errors) {
+      const errorTable = document.getElementById('errorTable');
+      errorTable.innerHTML = '';
+      
+      if (!errors || errors.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td colspan="4" class="px-6 py-4 text-center text-gray-500">No errors reported</td>
+        `;
+        errorTable.appendChild(row);
+        return;
+      }
+      
+      errors.forEach(error => {
+        const row = document.createElement('tr');
+        const date = new Date(error.lastOccurrence);
+        
+        row.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${error.service}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${error.type}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${error.count}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date.toLocaleString()}</td>
+        `;
+        errorTable.appendChild(row);
+      });
+    }
+    
+    // Helper function to get auth token
+    function getAuthToken() {
+      return localStorage.getItem('authToken') || '';
+    }
+    
+    // Helper functions for UI state
+    function showLoading() {
+      // Add loading indicators if needed
+      document.getElementById('refreshBtn').disabled = true;
+      document.getElementById('refreshBtn').innerHTML = `
+        <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Loading...
+      `;
+    }
+    
+    function hideLoading() {
+      document.getElementById('refreshBtn').disabled = false;
+      document.getElementById('refreshBtn').textContent = 'Refresh Data';
+    }
+    
+    function showError(message) {
+      // Display error notification
+      alert(message);
+    }
+    
+    // Cache Health Check functionality
+    document.getElementById('checkCacheHealthBtn').addEventListener('click', checkCacheHealth);
+    
+    async function checkCacheHealth() {
+      try {
+        // Disable button and show loading state
+        const button = document.getElementById('checkCacheHealthBtn');
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.innerHTML = `
+          <svg class="animate-spin h-5 w-5 mr-2 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Checking...
+        `;
+        
+        // Hide previous error
+        document.getElementById('cacheHealthError').classList.add('hidden');
+        
+        // Call the health check API
+        const response = await fetch('/api/monitoring/cache-health', {
+          headers: {
+            'Authorization': `Bearer ${getAuthToken()}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Update UI based on health status
+        const statusElement = document.getElementById('cacheHealthStatus');
+        const textElement = document.getElementById('cacheHealthText');
+        
+        // Set status indicator color
+        statusElement.className = 'w-4 h-4 rounded-full mr-2';
+        if (data.status === 'healthy') {
+          statusElement.classList.add('bg-green-500');
+          textElement.textContent = 'Healthy';
+          textElement.className = 'text-green-700';
+        } else if (data.status === 'degraded') {
+          statusElement.classList.add('bg-yellow-500');
+          textElement.textContent = 'Degraded';
+          textElement.className = 'text-yellow-700';
+        } else {
+          statusElement.classList.add('bg-red-500');
+          textElement.textContent = 'Unhealthy';
+          textElement.className = 'text-red-700';
+        }
+        
+        // Update metrics
+        document.getElementById('cacheResponseTime').textContent = `${data.responseTime}`;
+        
+        // Format timestamp
+        const timestamp = new Date(data.timestamp);
+        document.getElementById('cacheLastCheck').textContent = timestamp.toLocaleTimeString();
+        
+      } catch (error) {
+        console.error('Error checking cache health:', error);
+        
+        // Show error message
+        const errorElement = document.getElementById('cacheHealthError');
+        const errorMessageElement = document.getElementById('cacheHealthErrorMessage');
+        errorMessageElement.textContent = error.message || 'Failed to check cache health';
+        errorElement.classList.remove('hidden');
+        
+        // Update status indicator
+        const statusElement = document.getElementById('cacheHealthStatus');
+        const textElement = document.getElementById('cacheHealthText');
+        statusElement.className = 'w-4 h-4 rounded-full bg-red-500 mr-2';
+        textElement.textContent = 'Error';
+        textElement.className = 'text-red-700';
+      } finally {
+        // Reset button
+        const button = document.getElementById('checkCacheHealthBtn');
+        button.disabled = false;
+        button.textContent = 'Run Health Check';
+      }
+    }
+    
+    // Run initial health check when page loads
+    setTimeout(checkCacheHealth, 1000);
+  </script>
+</body>
+</html> 

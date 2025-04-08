@@ -1,0 +1,386 @@
+openapi: 3.0.0
+info:
+  title: EcoPilot API
+  description: API for the EcoPilot CO2 calculation and sustainability platform
+  version: 1.0.0
+  contact:
+    name: EcoPilot Team
+    email: support@ecopilot.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://api.ecopilot.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication endpoints
+  - name: CO2 Calculator
+    description: CO2 emission calculation endpoints
+  - name: User
+    description: User management endpoints
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Creates a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in a user
+      description: Authenticates a user and returns tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh authentication tokens
+      description: Issues new tokens using a refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /co2/calculate:
+    post:
+      tags:
+        - CO2 Calculator
+      summary: Calculate CO2 emissions
+      description: Calculates CO2 emissions for a given transport type and distance
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CO2CalculationRequest'
+      responses:
+        '200':
+          description: Calculation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CO2CalculationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /co2/factors:
+    get:
+      tags:
+        - CO2 Calculator
+      summary: Get emission factors
+      description: Returns emission factors for different transport types
+      responses:
+        '200':
+          description: Emission factors retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmissionFactorsResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /co2/history:
+    get:
+      tags:
+        - CO2 Calculator
+      summary: Get user's CO2 calculation history
+      description: Returns a user's CO2 calculation history
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: History retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CO2HistoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: securePassword123
+        name:
+          type: string
+          example: John Doe
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: securePassword123
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: usr_123abc
+            name:
+              type: string
+              example: John Doe
+            email:
+              type: string
+              format: email
+              example: user@example.com
+
+    CO2CalculationRequest:
+      type: object
+      required:
+        - transportType
+        - distance
+      properties:
+        transportType:
+          type: string
+          enum: [car, plane, public]
+          example: car
+        distance:
+          type: number
+          format: float
+          minimum: 0
+          example: 10.5
+
+    CO2CalculationResponse:
+      type: object
+      properties:
+        emissions:
+          type: number
+          format: float
+          example: 2.625
+        unit:
+          type: string
+          example: kg
+        transportType:
+          type: string
+          enum: [car, plane, public]
+          example: car
+        distance:
+          type: number
+          format: float
+          example: 10.5
+
+    EmissionFactorsResponse:
+      type: object
+      properties:
+        car:
+          type: number
+          format: float
+          example: 0.25
+        plane:
+          type: number
+          format: float
+          example: 0.40
+        public:
+          type: number
+          format: float
+          example: 0.10
+
+    CO2HistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: rec123abc
+        transportType:
+          type: string
+          enum: [car, plane, public]
+          example: car
+        distance:
+          type: number
+          format: float
+          example: 10.5
+        emissions:
+          type: number
+          format: float
+          example: 2.625
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-04-01T12:00:00Z
+
+    CO2HistoryResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CO2HistoryItem'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: An error occurred
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: email
+                  message:
+                    type: string
+                    example: Email is already in use
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              message: Invalid request parameters
+              code: VALIDATION_ERROR
+              details:
+                - field: distance
+                  message: Distance must be a positive number
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              message: Authentication required
+              code: AUTHENTICATION_ERROR
+
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error:
+              message: Too many requests. Please try again later.
+              code: RATE_LIMIT_EXCEEDED 

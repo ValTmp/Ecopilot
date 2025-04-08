@@ -5,6 +5,7 @@ const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
 const RedisStore = require('rate-limit-redis');
+const Redis = require('ioredis');
 const cache = require('../config/redis');
 const logger = require('../services/logger');
 
@@ -106,32 +107,39 @@ const authLimiter = rateLimit({
   legacyHeaders: false
 });
 
+const redis = new Redis(process.env.REDIS_URL);
+
 /**
  * Rate Limiter für CO2-Berechnungen
  */
-// @KI-GEN-START [2025-04-06]
+// @KI-GEN-START
 const co2CalculatorLimiter = rateLimit({
   store: new RedisStore({
-    client: cache.client,
+    client: redis,
     prefix: 'co2_calc:'
   }),
-  windowMs: 60 * 1000, // 1 Minute
-  max: 10, // 10 Berechnungen pro IP pro Minute
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
   message: {
-    error: 'CO2 calculation rate limit exceeded. Please wait a minute before trying again.',
-    code: 429
+    error: 'Too many CO2 calculations. Please wait a minute before trying again.'
   },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.ip, // Use IP as the key
+  keyGenerator: (req) => {
+    // Use user ID if authenticated, otherwise use IP
+    const userId = req.user ? req.user.id : null;
+    return userId ? `user:${userId}` : req.ip;
+  },
   handler: (req, res) => {
-    logger.warn(`Rate limit exceeded for CO2 calculation: IP ${req.ip}`);
-    res.status(429).json({
-      error: 'Rate limit exceeded',
-      message: 'Too many CO2 calculations. Please wait a minute before trying again.',
-      code: 429
+    logger.warn('Rate limit exceeded for CO2 calculator', { 
+      ip: req.ip,
+      userId: req.user ? req.user.id : 'anonymous'
     });
-  }
+    res.status(429).json({
+      error: 'Too many CO2 calculations. Please wait a minute before trying again.',
+      retryAfter: Math.ceil(60 - ((Date.now() - req.rateLimit.resetTime) / 1000))
+    });
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false // Disable the `X-RateLimit-*` headers
 });
 // @KI-GEN-END
 

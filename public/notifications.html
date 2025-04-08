@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - EcoPilot</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/goals.css">
+
+  <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <!-- Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="logo">
+        <a href="index.html">
+          <img src="images/logo.png" alt="EcoPilot Logo">
+          <span>EcoPilot</span>
+        </a>
+      </div>
+      
+      <nav class="main-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="calculator.html">CO2 Calculator</a></li>
+          <li><a href="goals.html">Goals</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="tips.html">Eco Tips</a></li>
+        </ul>
+      </nav>
+      
+      <div class="user-actions">
+        <div class="notification-wrapper">
+          <button class="notification-btn" id="notificationBtn">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" style="display: none;">0</span>
+          </button>
+          <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-header">
+              <h3>Notifications</h3>
+              <a href="notifications.html" class="view-all-btn">View All</a>
+            </div>
+            <div id="notificationList"></div>
+          </div>
+        </div>
+        <div class="user-menu">
+          <button class="user-menu-btn" id="userMenuBtn">
+            <img src="images/avatar.png" alt="User Avatar">
+            <span>John Doe</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <ul>
+              <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+              <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+              <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-content">
+          <h1>Your Notifications</h1>
+          <p>Stay updated on your CO2 reduction goals and achievements.</p>
+        </div>
+      </div>
+    </section>
+    
+    <section class="notifications-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>All Notifications</h2>
+          <div class="filter-options">
+            <label for="showAll">
+              <input type="checkbox" id="showAll" name="showAll">
+              Show read notifications
+            </label>
+            <button class="btn btn-secondary mark-all-read-btn" id="markAllReadBtn">
+              <i class="fas fa-check-double"></i> Mark All as Read
+            </button>
+          </div>
+        </div>
+        
+        <!-- Notifications container -->
+        <div class="notifications-container" id="notificationsContainer">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="images/logo.png" alt="EcoPilot Logo">
+          <span>EcoPilot</span>
+        </div>
+        
+        <div class="footer-links">
+          <div class="footer-column">
+            <h3>Company</h3>
+            <ul>
+              <li><a href="about.html">About Us</a></li>
+              <li><a href="contact.html">Contact</a></li>
+              <li><a href="careers.html">Careers</a></li>
+            </ul>
+          </div>
+          
+          <div class="footer-column">
+            <h3>Resources</h3>
+            <ul>
+              <li><a href="blog.html">Blog</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+              <li><a href="support.html">Support</a></li>
+            </ul>
+          </div>
+          
+          <div class="footer-column">
+            <h3>Legal</h3>
+            <ul>
+              <li><a href="privacy.html">Privacy Policy</a></li>
+              <li><a href="terms.html">Terms of Service</a></li>
+              <li><a href="cookies.html">Cookie Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="footer-social">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>&copy; 2023 EcoPilot. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script src="js/main.js"></script>
+  <script src="js/goalManager.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elements
+      const notificationsContainer = document.getElementById('notificationsContainer');
+      const showAllCheckbox = document.getElementById('showAll');
+      const markAllReadBtn = document.getElementById('markAllReadBtn');
+      
+      // Initial load
+      loadNotifications(false);
+      
+      // Toggle show all notifications
+      showAllCheckbox.addEventListener('change', function() {
+        loadNotifications(this.checked);
+      });
+      
+      // Mark all as read
+      markAllReadBtn.addEventListener('click', function() {
+        // Use NotificationsManager for real-time updates if available
+        if (typeof NotificationsManager !== 'undefined') {
+          NotificationsManager.markAllAsRead();
+          showToast('All notifications marked as read');
+        } else {
+          GoalManager.markAllNotificationsRead()
+            .then(result => {
+              if (result.success) {
+                // Show success message
+                showToast('All notifications marked as read');
+                
+                // Reload notifications
+                loadNotifications(showAllCheckbox.checked);
+                
+                // Update badge
+                GoalManager.updateNotificationBadge();
+              }
+            })
+            .catch(error => {
+              showToast(`Error: ${error.message}`, 'error');
+            });
+        }
+      });
+      
+      // Function to load notifications
+      function loadNotifications(includeRead) {
+        if (typeof NotificationsManager !== 'undefined') {
+          // Use the real-time notifications manager if available
+          NotificationsManager.loadNotifications();
+        } else {
+          // Fall back to GoalManager
+          GoalManager.loadAndDisplayNotifications(notificationsContainer, includeRead);
+        }
+      }
+      
+      // Show toast message
+      function showToast(message, type = 'success') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.querySelector('.toast-container');
+        
+        if (!toastContainer) {
+          toastContainer = document.createElement('div');
+          toastContainer.className = 'toast-container';
+          document.body.appendChild(toastContainer);
+        }
+        
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+          <div class="toast-message">${message}</div>
+          <button class="toast-close">&times;</button>
+        `;
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+          toast.classList.add('show');
+        }, 10);
+        
+        // Add close button functionality
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            toast.remove();
+          }, 300);
+        });
+        
+        // Auto close after 5 seconds
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => {
+              if (toast.parentNode) {
+                toast.remove();
+              }
+            }, 300);
+          }
+        }, 5000);
+      }
+      
+      // Notifications dropdown
+      const notificationBtn = document.getElementById('notificationBtn');
+      const notificationDropdown = document.getElementById('notificationDropdown');
+      
+      notificationBtn.addEventListener('click', function() {
+        notificationDropdown.classList.toggle('show');
+      });
+      
+      // Close notification dropdown when clicking outside
+      window.addEventListener('click', function(event) {
+        if (!event.target.closest('.notification-wrapper') && notificationDropdown.classList.contains('show')) {
+          notificationDropdown.classList.remove('show');
+        }
+      });
+      
+      // User dropdown
+      const userMenuBtn = document.getElementById('userMenuBtn');
+      const userDropdown = document.getElementById('userDropdown');
+      
+      userMenuBtn.addEventListener('click', function() {
+        userDropdown.classList.toggle('show');
+      });
+      
+      // Close user dropdown when clicking outside
+      window.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu') && userDropdown.classList.contains('show')) {
+          userDropdown.classList.remove('show');
+        }
+      });
+      
+      // Mobile menu toggle
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const mainNav = document.querySelector('.main-nav');
+      
+      mobileMenuToggle.addEventListener('click', function() {
+        mainNav.classList.toggle('show');
+        this.classList.toggle('active');
+      });
+    });
+  </script>
+</body>
+</html> 

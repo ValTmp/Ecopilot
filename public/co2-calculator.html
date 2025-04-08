@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot - Enhanced CO2 Calculator</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .loading {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .eco-gradient {
+      background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 240px;
+      background-color: #555;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -120px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="eco-gradient text-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1 class="text-2xl font-bold">EcoPilot</h1>
+      </div>
+      <div class="flex space-x-4">
+        <a href="/" class="text-white hover:text-gray-200 transition">Home</a>
+        <a href="/goals.html" class="text-white hover:text-gray-200 transition">Goals</a>
+        <a href="/dashboard.html" class="text-white hover:text-gray-200 transition">Dashboard</a>
+        <button id="historyBtn" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          View History
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Enhanced CO2 Emissions Calculator</h2>
+      <p class="text-gray-600">Calculate and track your transportation carbon footprint with Redis caching</p>
+    </header>
+
+    <!-- Emission Factors Display -->
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 mb-8">
+      <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        Emission Factors
+        <div class="tooltip ml-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="tooltiptext">These values represent the kg of CO2 emitted per kilometer for each transport type. Cached for 1 hour.</span>
+        </div>
+      </h3>
+      
+      <div id="factorsLoading" class="py-4 flex justify-center">
+        <svg class="loading h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      
+      <div id="factorsContent" class="hidden">
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-green-50 p-3 rounded-md text-center">
+            <div class="text-sm text-gray-600">Car</div>
+            <div class="text-lg font-bold text-green-700" id="factorCar">0.171</div>
+            <div class="text-xs text-gray-500">kg CO2/km</div>
+          </div>
+          <div class="bg-green-50 p-3 rounded-md text-center">
+            <div class="text-sm text-gray-600">Plane</div>
+            <div class="text-lg font-bold text-green-700" id="factorPlane">0.255</div>
+            <div class="text-xs text-gray-500">kg CO2/km</div>
+          </div>
+          <div class="bg-green-50 p-3 rounded-md text-center">
+            <div class="text-sm text-gray-600">Public</div>
+            <div class="text-lg font-bold text-green-700" id="factorPublic">0.04</div>
+            <div class="text-xs text-gray-500">kg CO2/km</div>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-right text-gray-500" id="cacheStatus">
+          Factors last updated: <span id="cacheTime">Just now</span>
+        </div>
+      </div>
+      
+      <div id="factorsError" class="py-4 hidden">
+        <div class="bg-red-50 rounded-md p-4 border border-red-100">
+          <p class="text-red-700" id="factorsErrorMessage"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 mb-8">
+      <form id="co2Form" class="space-y-4">
+        <div>
+          <label for="userId" class="block text-sm font-medium text-gray-700">User ID</label>
+          <input type="text" id="userId" name="userId" required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="Enter your user ID">
+        </div>
+
+        <div>
+          <label for="transportType" class="block text-sm font-medium text-gray-700">Transport Type</label>
+          <select id="transportType" name="transportType" required
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            <option value="">Select transport type</option>
+            <option value="car">Car</option>
+            <option value="plane">Plane</option>
+            <option value="public">Public Transport</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="distance" class="block text-sm font-medium text-gray-700">Distance (km)</label>
+          <input type="number" id="distance" name="distance" required min="0.1" step="0.1"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="Enter distance in kilometers">
+        </div>
+
+        <button type="submit"
+          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white eco-gradient hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition">
+          Calculate CO2 Emissions
+        </button>
+      </form>
+
+      <div id="estimateSection" class="mt-4 pt-4 border-t border-gray-200">
+        <div class="flex justify-between items-center">
+          <h4 class="text-sm font-medium text-gray-700">Estimated Emissions:</h4>
+          <span id="estimatedEmissions" class="text-lg font-bold text-green-600">0.00 kg CO2</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Real-time estimate based on selected transport type and distance</p>
+      </div>
+
+      <div id="result" class="mt-6 hidden fade-in">
+        <div class="bg-green-50 rounded-md p-4 border border-green-100">
+          <h3 class="text-lg font-bold text-gray-900">Calculation Result</h3>
+          <p class="mt-2 text-gray-600">Your journey will produce:</p>
+          <p class="text-3xl font-bold text-green-600" id="emissionsResult"></p>
+          <p class="text-sm text-gray-500 mt-2" id="calculationDetails"></p>
+        </div>
+      </div>
+
+      <!-- Eco Tips Section -->
+      <div id="ecoTips" class="mt-6 hidden fade-in">
+        <div class="bg-blue-50 rounded-md p-4 border border-blue-100">
+          <h3 class="text-lg font-bold text-gray-900 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Eco Tips
+          </h3>
+          
+          <!-- Tabs -->
+          <div class="flex border-b border-gray-200 mt-2">
+            <button id="newTipsTab" class="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-500">Personalized Tips</button>
+            <button id="favoriteTipsTab" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">My Favorites</button>
+          </div>
+          
+          <!-- New Tips Content -->
+          <div id="newTipsContent">
+            <p class="mt-2 mb-4 text-gray-600">Here are some personalized tips to reduce your carbon footprint:</p>
+            
+            <div id="tipsLoading" class="py-2 flex justify-center">
+              <svg class="loading h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            
+            <div id="tipsList" class="space-y-3">
+              <!-- Tips will be inserted here -->
+            </div>
+          </div>
+          
+          <!-- Favorite Tips Content -->
+          <div id="favoriteTipsContent" class="hidden">
+            <p class="mt-2 mb-4 text-gray-600">Your favorite eco tips:</p>
+            
+            <div id="favoritesLoading" class="py-2 flex justify-center hidden">
+              <svg class="loading h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            
+            <div id="favoritesList" class="space-y-3">
+              <p class="text-gray-500 text-center" id="noFavoritesMessage">You haven't saved any tips as favorites yet.</p>
+              <!-- Favorite tips will be inserted here -->
+            </div>
+          </div>
+          
+          <div id="tipsError" class="mt-2 hidden">
+            <p class="text-red-600 text-sm" id="tipsErrorMessage"></p>
+          </div>
+          
+          <div class="mt-4 text-right">
+            <span id="tipsStatus" class="text-xs text-gray-500"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="error" class="mt-6 hidden fade-in">
+        <div class="bg-red-50 rounded-md p-4 border border-red-100">
+          <div class="flex">
+            <svg class="h-5 w-5 text-red-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+            <p class="text-red-700" id="errorMessage"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="loading" class="mt-6 hidden">
+        <div class="flex justify-center">
+          <svg class="loading h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Section -->
+    <div id="historySection" class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 hidden fade-in">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-gray-800">Your CO2 Calculation History</h3>
+        <div class="flex space-x-2">
+          <div class="relative" id="exportDropdown">
+            <button id="exportBtn" class="flex items-center text-blue-600 hover:text-blue-800 px-2 py-1 border border-blue-200 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div class="absolute right-0 mt-2 py-2 w-48 bg-white rounded-md shadow-xl z-20 hidden" id="exportOptions">
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="exportJSON">Export as JSON</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" id="exportCSV">Export as CSV</a>
+            </div>
+          </div>
+          <button id="refreshHistory" class="text-green-600 hover:text-green-800 p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <div id="historyLoading" class="py-4 flex justify-center">
+        <svg class="loading h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      
+      <div id="historyContent" class="hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distance</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CO2 Impact</th>
+              </tr>
+            </thead>
+            <tbody id="historyTable" class="bg-white divide-y divide-gray-200">
+              <!-- History items will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div id="historyError" class="py-4 hidden">
+        <div class="bg-red-50 rounded-md p-4 border border-red-100">
+          <p class="text-red-700" id="historyErrorMessage"></p>
+        </div>
+      </div>
+      
+      <div id="noHistory" class="py-4 text-center hidden">
+        <p class="text-gray-500">No calculation history found. Start calculating your CO2 emissions!</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white py-6 mt-12">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+        </div>
+        <div>
+          <a href="/docs/co2-api.md" class="text-green-400 hover:text-green-300 mr-4">API Documentation</a>
+          <a href="https://github.com/ValTmp/EcoPilot" class="text-green-400 hover:text-green-300">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Store the last used userId in localStorage
+    if (localStorage.getItem('ecopilot_userId')) {
+      document.getElementById('userId').value = localStorage.getItem('ecopilot_userId');
+    }
+    
+    // Fetch emission factors when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchEmissionFactors();
+    });
+    
+    // Real-time emission calculation
+    const transportTypeSelect = document.getElementById('transportType');
+    const distanceInput = document.getElementById('distance');
+    const estimatedEmissions = document.getElementById('estimatedEmissions');
+    
+    function updateEstimate() {
+      const transportType = transportTypeSelect.value;
+      const distance = parseFloat(distanceInput.value);
+      
+      if (transportType && !isNaN(distance) && distance > 0) {
+        // Use the emission factor for the selected transport type
+        const factors = {
+          car: parseFloat(document.getElementById('factorCar').textContent),
+          plane: parseFloat(document.getElementById('factorPlane').textContent),
+          public: parseFloat(document.getElementById('factorPublic').textContent)
+        };
+        
+        const factor = factors[transportType];
+        const emissions = factor * distance;
+        
+        estimatedEmissions.textContent = `${emissions.toFixed(2)} kg CO2`;
+      } else {
+        estimatedEmissions.textContent = '0.00 kg CO2';
+      }
+    }
+    
+    transportTypeSelect.addEventListener('change', updateEstimate);
+    distanceInput.addEventListener('input', updateEstimate);
+    
+    // Fetch emission factors with cache
+    async function fetchEmissionFactors() {
+      const factorsLoading = document.getElementById('factorsLoading');
+      const factorsContent = document.getElementById('factorsContent');
+      const factorsError = document.getElementById('factorsError');
+      const factorsErrorMessage = document.getElementById('factorsErrorMessage');
+      const cacheTime = document.getElementById('cacheTime');
+      
+      // Show loading
+      factorsLoading.classList.remove('hidden');
+      factorsContent.classList.add('hidden');
+      factorsError.classList.add('hidden');
+      
+      try {
+        const response = await fetch('/api/co2/factors');
+        
+        // Check if response came from cache
+        const isFromCache = response.headers.get('X-Cache') === 'HIT';
+        
+        if (isFromCache) {
+          document.getElementById('cacheStatus').textContent = 'Emission factors loaded from cache';
+          document.getElementById('cacheStatus').classList.remove('text-red-500');
+          document.getElementById('cacheStatus').classList.add('text-green-500');
+        } else {
+          document.getElementById('cacheStatus').textContent = 'Emission factors loaded from database';
+          document.getElementById('cacheStatus').classList.remove('text-green-500');
+          document.getElementById('cacheStatus').classList.add('text-yellow-500');
+        }
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch emission factors');
+        }
+        
+        const data = await response.json();
+        
+        // Update the factors display
+        const factors = data.data;
+        document.getElementById('factorCar').textContent = factors.car.toFixed(3);
+        document.getElementById('factorPlane').textContent = factors.plane.toFixed(3);
+        document.getElementById('factorPublic').textContent = factors.public.toFixed(3);
+        
+        // Update cache status
+        const now = new Date();
+        cacheTime.textContent = now.toLocaleTimeString();
+        
+        factorsContent.classList.remove('hidden');
+        
+        // Update the estimate if form fields are filled
+        updateEstimate();
+      } catch (error) {
+        factorsErrorMessage.textContent = error.message;
+        factorsError.classList.remove('hidden');
+      } finally {
+        factorsLoading.classList.add('hidden');
+      }
+    }
+    
+    // CO2 Calculator Form Submit
+    document.getElementById('co2Form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const userId = form.userId.value.trim();
+      const transportType = form.transportType.value;
+      const distance = parseFloat(form.distance.value);
+      
+      // Save userId to localStorage
+      localStorage.setItem('ecopilot_userId', userId);
+      
+      const resultDiv = document.getElementById('result');
+      const errorDiv = document.getElementById('error');
+      const loadingDiv = document.getElementById('loading');
+      const ecoTipsDiv = document.getElementById('ecoTips');
+      const emissionsResult = document.getElementById('emissionsResult');
+      const calculationDetails = document.getElementById('calculationDetails');
+      const errorMessage = document.getElementById('errorMessage');
+
+      // Hide previous results and show loading
+      resultDiv.classList.add('hidden');
+      errorDiv.classList.add('hidden');
+      ecoTipsDiv.classList.add('hidden');
+      loadingDiv.classList.remove('hidden');
+
+      try {
+        const response = await fetch('/api/co2/calculate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            transportType,
+            distance
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to calculate CO2 emissions');
+        }
+        
+        // Display calculation result
+        emissionsResult.textContent = `${data.emissions.toFixed(2)} kg CO2`;
+        calculationDetails.textContent = `Based on ${distance} km travel via ${transportType}`;
+        resultDiv.classList.remove('hidden');
+        
+        // Fetch and display eco tips
+        fetchEcoTips(userId, transportType, distance);
+      } catch (error) {
+        errorMessage.textContent = error.message;
+        errorDiv.classList.remove('hidden');
+      } finally {
+        loadingDiv.classList.add('hidden');
+      }
+    });
+    
+    /**
+     * Fetch personalized eco tips
+     * @param {string} userId - User ID
+     * @param {string} transportType - Transport type (car, plane, public)
+     * @param {number} distance - Distance in kilometers
+     */
+    async function fetchEcoTips(userId, transportType, distance) {
+      const tipsList = document.getElementById('tipsList');
+      const tipsLoading = document.getElementById('tipsLoading');
+      const tipsError = document.getElementById('tipsError');
+      const tipsErrorMessage = document.getElementById('tipsErrorMessage');
+      const tipsStatus = document.getElementById('tipsStatus');
+      const ecoTipsDiv = document.getElementById('ecoTips');
+      
+      // Show loading
+      tipsList.innerHTML = '';
+      tipsLoading.classList.remove('hidden');
+      tipsError.classList.add('hidden');
+      ecoTipsDiv.classList.remove('hidden');
+      
+      try {
+        const response = await fetch(`/api/co2/tips?userId=${userId}&transportType=${transportType}&distance=${distance}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch eco tips');
+        }
+        
+        const data = await response.json();
+        
+        // Check if we have tips
+        if (!data.success || !data.data || data.data.length === 0) {
+          tipsList.innerHTML = '<p class="text-gray-500">No tips available for this journey.</p>';
+          return;
+        }
+        
+        // Display tips
+        tipsList.innerHTML = '';
+        data.data.forEach((tip) => {
+          const tipElement = document.createElement('div');
+          tipElement.className = 'bg-white p-3 rounded-md shadow-sm border border-blue-100';
+          tipElement.dataset.tipId = tip.id;
+          
+          // Determine impact badge color
+          let impactBadge = '';
+          if (tip.impact === 'high') {
+            impactBadge = '<span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">High Impact</span>';
+          } else if (tip.impact === 'medium') {
+            impactBadge = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Medium Impact</span>';
+          } else if (tip.impact === 'low') {
+            impactBadge = '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded">Low Impact</span>';
+          } else if (tip.impact === 'info') {
+            impactBadge = '<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Info</span>';
+          }
+          
+          tipElement.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-800">${tip.tip}</p>
+                <div class="flex items-center space-x-2 mt-2">
+                  <button class="favorite-btn text-gray-400 hover:text-yellow-500" data-tip-id="${tip.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </button>
+                  <span class="text-xs text-gray-500">${tip.category}</span>
+                </div>
+              </div>
+              <div class="ml-2">${impactBadge}</div>
+            </div>
+          `;
+          
+          tipsList.appendChild(tipElement);
+        });
+        
+        // Add event listeners to favorite buttons
+        document.querySelectorAll('.favorite-btn').forEach(btn => {
+          btn.addEventListener('click', handleFavoriteClick);
+        });
+        
+        // Show cache status
+        const isCached = response.headers.get('X-Cache') === 'HIT';
+        tipsStatus.textContent = isCached ? 'Tips from cache' : 'Fresh tips';
+        tipsStatus.className = `text-xs ${isCached ? 'text-blue-600' : 'text-gray-500'}`;
+        
+        // Also fetch favorites to refresh the tab
+        fetchFavoriteTips(document.getElementById('userId').value.trim());
+        
+      } catch (error) {
+        tipsErrorMessage.textContent = error.message;
+        tipsError.classList.remove('hidden');
+      } finally {
+        tipsLoading.classList.add('hidden');
+      }
+    }
+    
+    /**
+     * Fetch user's favorite eco tips
+     * @param {string} userId - User ID
+     */
+    async function fetchFavoriteTips(userId) {
+      const favoritesList = document.getElementById('favoritesList');
+      const favoritesLoading = document.getElementById('favoritesLoading');
+      const noFavoritesMessage = document.getElementById('noFavoritesMessage');
+      const tipsError = document.getElementById('tipsError');
+      const tipsErrorMessage = document.getElementById('tipsErrorMessage');
+      
+      if (!userId) {
+        return;
+      }
+      
+      // Show loading
+      favoritesList.innerHTML = '';
+      favoritesLoading.classList.remove('hidden');
+      noFavoritesMessage.classList.add('hidden');
+      tipsError.classList.add('hidden');
+      
+      try {
+        const response = await fetch(`/api/co2/favorite-tips/${userId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch favorite tips');
+        }
+        
+        const data = await response.json();
+        
+        // Check if we have favorites
+        if (!data.success || !data.data || data.data.length === 0) {
+          favoritesList.innerHTML = '';
+          noFavoritesMessage.classList.remove('hidden');
+          return;
+        }
+        
+        // Hide no favorites message
+        noFavoritesMessage.classList.add('hidden');
+        
+        // Display favorite tips
+        favoritesList.innerHTML = '';
+        data.data.forEach((tip) => {
+          const tipElement = document.createElement('div');
+          tipElement.className = 'bg-white p-3 rounded-md shadow-sm border border-blue-100';
+          tipElement.dataset.tipId = tip.id;
+          
+          // Determine impact badge color
+          let impactBadge = '';
+          if (tip.impact === 'high') {
+            impactBadge = '<span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">High Impact</span>';
+          } else if (tip.impact === 'medium') {
+            impactBadge = '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded">Medium Impact</span>';
+          } else if (tip.impact === 'low') {
+            impactBadge = '<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded">Low Impact</span>';
+          } else if (tip.impact === 'info') {
+            impactBadge = '<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Info</span>';
+          }
+          
+          tipElement.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-800">${tip.tip}</p>
+                <div class="flex items-center space-x-2 mt-2">
+                  <button class="unfavorite-btn text-yellow-500 hover:text-gray-400" data-tip-id="${tip.id}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </button>
+                  <span class="text-xs text-gray-500">${tip.category}</span>
+                </div>
+              </div>
+              <div class="ml-2">${impactBadge}</div>
+            </div>
+          `;
+          
+          favoritesList.appendChild(tipElement);
+        });
+        
+        // Add event listeners to unfavorite buttons
+        document.querySelectorAll('.unfavorite-btn').forEach(btn => {
+          btn.addEventListener('click', handleUnfavoriteClick);
+        });
+        
+      } catch (error) {
+        tipsErrorMessage.textContent = error.message;
+        tipsError.classList.remove('hidden');
+      } finally {
+        favoritesLoading.classList.add('hidden');
+      }
+    }
+    
+    /**
+     * Handle click on favorite button
+     * @param {Event} event - Click event
+     */
+    async function handleFavoriteClick(event) {
+      const userId = document.getElementById('userId').value.trim();
+      const tipId = event.currentTarget.dataset.tipId;
+      
+      if (!userId) {
+        alert('Please enter a User ID to save favorites');
+        document.getElementById('userId').focus();
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/co2/favorite-tips/${userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ tipId })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to save tip to favorites');
+        }
+        
+        // Visual feedback
+        event.currentTarget.classList.remove('text-gray-400');
+        event.currentTarget.classList.add('text-yellow-500');
+        event.currentTarget.querySelector('svg').setAttribute('fill', 'currentColor');
+        
+        // Show a quick toast notification
+        showToast('Tip added to favorites!');
+        
+        // Refresh favorites tab
+        fetchFavoriteTips(userId);
+        
+      } catch (error) {
+        console.error('Error saving favorite:', error);
+        showToast('Failed to save favorite', true);
+      }
+    }
+    
+    /**
+     * Handle click on unfavorite button
+     * @param {Event} event - Click event
+     */
+    async function handleUnfavoriteClick(event) {
+      const userId = document.getElementById('userId').value.trim();
+      const tipId = event.currentTarget.dataset.tipId;
+      
+      try {
+        const response = await fetch(`/api/co2/favorite-tips/${userId}/${tipId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to remove tip from favorites');
+        }
+        
+        // Visual feedback - remove the whole tip card
+        const tipCard = event.currentTarget.closest('[data-tip-id]');
+        tipCard.style.opacity = '0';
+        setTimeout(() => {
+          tipCard.remove();
+          
+          // Check if we need to show the "no favorites" message
+          const favoritesList = document.getElementById('favoritesList');
+          if (favoritesList.children.length === 0) {
+            document.getElementById('noFavoritesMessage').classList.remove('hidden');
+          }
+        }, 300);
+        
+        // Show a quick toast notification
+        showToast('Tip removed from favorites');
+        
+      } catch (error) {
+        console.error('Error removing favorite:', error);
+        showToast('Failed to remove favorite', true);
+      }
+    }
+    
+    /**
+     * Show a toast notification
+     * @param {string} message - Message to display
+     * @param {boolean} isError - Whether this is an error message
+     */
+    function showToast(message, isError = false) {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-md ${isError ? 'bg-red-500' : 'bg-green-500'} text-white`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      // Fade in
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transition = 'opacity 0.3s ease-in-out';
+      }, 10);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+    
+    // Tab switching functionality
+    document.getElementById('newTipsTab').addEventListener('click', function() {
+      this.classList.add('text-blue-600', 'border-b-2', 'border-blue-500');
+      this.classList.remove('text-gray-500');
+      
+      document.getElementById('favoriteTipsTab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-500');
+      document.getElementById('favoriteTipsTab').classList.add('text-gray-500');
+      
+      document.getElementById('newTipsContent').classList.remove('hidden');
+      document.getElementById('favoriteTipsContent').classList.add('hidden');
+    });
+    
+    document.getElementById('favoriteTipsTab').addEventListener('click', function() {
+      this.classList.add('text-blue-600', 'border-b-2', 'border-blue-500');
+      this.classList.remove('text-gray-500');
+      
+      document.getElementById('newTipsTab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-500');
+      document.getElementById('newTipsTab').classList.add('text-gray-500');
+      
+      document.getElementById('favoriteTipsContent').classList.remove('hidden');
+      document.getElementById('newTipsContent').classList.add('hidden');
+      
+      // Fetch favorites when tab is opened
+      const userId = document.getElementById('userId').value.trim();
+      if (userId) {
+        fetchFavoriteTips(userId);
+      }
+    });
+    
+    // Toggle history section visibility
+    document.getElementById('historyBtn').addEventListener('click', () => {
+      const historySection = document.getElementById('historySection');
+      const userId = document.getElementById('userId').value.trim();
+      
+      if (!userId) {
+        alert('Please enter a User ID to view history');
+        document.getElementById('userId').focus();
+        return;
+      }
+      
+      if (historySection.classList.contains('hidden')) {
+        historySection.classList.remove('hidden');
+        fetchHistory(userId);
+      } else {
+        historySection.classList.add('hidden');
+      }
+    });
+    
+    // Refresh history
+    document.getElementById('refreshHistory').addEventListener('click', () => {
+      const userId = document.getElementById('userId').value.trim();
+      if (userId) {
+        fetchHistory(userId);
+      }
+    });
+    
+    // Fetch user history
+    async function fetchHistory(userId) {
+      const historyLoading = document.getElementById('historyLoading');
+      const historyContent = document.getElementById('historyContent');
+      const historyError = document.getElementById('historyError');
+      const historyErrorMessage = document.getElementById('historyErrorMessage');
+      const noHistory = document.getElementById('noHistory');
+      const historyTable = document.getElementById('historyTable');
+      
+      // Show loading
+      historyLoading.classList.remove('hidden');
+      historyContent.classList.add('hidden');
+      historyError.classList.add('hidden');
+      noHistory.classList.add('hidden');
+      
+      try {
+        const response = await fetch(`/api/co2/history/${userId}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch history');
+        }
+        
+        // Clear previous history
+        historyTable.innerHTML = '';
+        
+        if (data.data && data.data.length > 0) {
+          // Display history
+          data.data.forEach(item => {
+            const row = document.createElement('tr');
+            
+            // Format date
+            const date = new Date(item.date);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            
+            // Extract transport type from type field
+            const type = item.type.replace('transport_', '').charAt(0).toUpperCase() + item.type.replace('transport_', '').slice(1);
+            
+            // Extract distance from description or use a default
+            const distanceMatch = item.description && item.description.match(/\d+(\.\d+)? km/);
+            const distance = distanceMatch ? distanceMatch[0] : 'N/A';
+            
+            row.innerHTML = `
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${type}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${distance}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${item.co2Impact.toFixed(2)} kg</td>
+            `;
+            
+            historyTable.appendChild(row);
+          });
+          
+          historyContent.classList.remove('hidden');
+        } else {
+          noHistory.classList.remove('hidden');
+        }
+      } catch (error) {
+        historyErrorMessage.textContent = error.message;
+        historyError.classList.remove('hidden');
+      } finally {
+        historyLoading.classList.add('hidden');
+      }
+    }
+    
+    // Toggle export dropdown
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      document.getElementById('exportOptions').classList.toggle('hidden');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+      const dropdown = document.getElementById('exportDropdown');
+      const options = document.getElementById('exportOptions');
+      
+      if (!dropdown.contains(event.target) && !options.classList.contains('hidden')) {
+        options.classList.add('hidden');
+      }
+    });
+    
+    // Export as JSON
+    document.getElementById('exportJSON').addEventListener('click', (event) => {
+      event.preventDefault();
+      const userId = document.getElementById('userId').value.trim();
+      
+      if (!userId) {
+        alert('Please enter a User ID to export data');
+        document.getElementById('userId').focus();
+        return;
+      }
+      
+      // Redirect to export endpoint (browser will handle the download)
+      window.open(`/api/co2/export/${userId}?format=json`, '_blank');
+    });
+    
+    // Export as CSV
+    document.getElementById('exportCSV').addEventListener('click', (event) => {
+      event.preventDefault();
+      const userId = document.getElementById('userId').value.trim();
+      
+      if (!userId) {
+        alert('Please enter a User ID to export data');
+        document.getElementById('userId').focus();
+        return;
+      }
+      
+      // Redirect to export endpoint (browser will handle the download)
+      window.open(`/api/co2/export/${userId}?format=csv`, '_blank');
+    });
+  </script>
+</body>
+</html> 

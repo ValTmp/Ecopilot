@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EcoPilot - CO2 Calculator</title>
+  <title>EcoPilot - Enhanced CO2 Calculator</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     .loading {
@@ -23,10 +23,34 @@
       0% { opacity: 0; }
       100% { opacity: 1; }
     }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 240px;
+      background-color: #555;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -120px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <nav class="bg-green-600 text-white shadow-md">
+  <nav class="eco-gradient text-white shadow-md">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,19 +60,69 @@
       </div>
       <div class="flex space-x-4">
         <a href="/" class="text-white hover:text-gray-200 transition">Home</a>
-        <a href="/dashboard.html" class="text-white hover:text-gray-200 transition">Dashboard</a>
-        <a href="/co2-calculator.html" class="text-white hover:text-gray-200 transition">CO2 Calculator</a>
         <a href="/goals.html" class="text-white hover:text-gray-200 transition">Goals</a>
-        <a id="adminLink" href="/admin-login.html" class="text-white hover:text-gray-200 transition hidden">Admin</a>
+        <a href="/dashboard.html" class="text-white hover:text-gray-200 transition">Dashboard</a>
+        <button id="historyBtn" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          View History
+        </button>
       </div>
-      </div>
-    </nav>
+    </div>
+  </nav>
 
   <div class="container mx-auto px-4 py-8">
     <header class="text-center mb-8">
-      <h2 class="text-3xl font-bold text-gray-800 mb-2">CO2 Emissions Calculator</h2>
-      <p class="text-gray-600">Calculate and track your transportation carbon footprint</p>
-  </header>
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Enhanced CO2 Emissions Calculator</h2>
+      <p class="text-gray-600">Calculate and track your transportation carbon footprint with Redis caching</p>
+    </header>
+
+    <!-- Emission Factors Display -->
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 mb-8">
+      <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+        Emission Factors
+        <div class="tooltip ml-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="tooltiptext">These values represent the kg of CO2 emitted per kilometer for each transport type. Cached for 1 hour.</span>
+        </div>
+      </h3>
+      
+      <div id="factorsLoading" class="py-4 flex justify-center">
+        <svg class="loading h-8 w-8 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      
+      <div id="factorsContent" class="hidden">
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-green-50 p-3 rounded-md text-center">
+            <div class="text-sm text-gray-600">Car</div>
+            <div class="text-lg font-bold text-green-700" id="factorCar">0.171</div>
+            <div class="text-xs text-gray-500">kg CO2/km</div>
+          </div>
+          <div class="bg-green-50 p-3 rounded-md text-center">
+            <div class="text-sm text-gray-600">Plane</div>
+            <div class="text-lg font-bold text-green-700" id="factorPlane">0.255</div>
+            <div class="text-xs text-gray-500">kg CO2/km</div>
+          </div>
+          <div class="bg-green-50 p-3 rounded-md text-center">
+            <div class="text-sm text-gray-600">Public</div>
+            <div class="text-lg font-bold text-green-700" id="factorPublic">0.04</div>
+            <div class="text-xs text-gray-500">kg CO2/km</div>
+          </div>
+        </div>
+        <div class="mt-2 text-xs text-right text-gray-500" id="cacheStatus">
+          Factors last updated: <span id="cacheTime">Just now</span>
+        </div>
+      </div>
+      
+      <div id="factorsError" class="py-4 hidden">
+        <div class="bg-red-50 rounded-md p-4 border border-red-100">
+          <p class="text-red-700" id="factorsErrorMessage"></p>
+        </div>
+      </div>
+    </div>
 
     <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 mb-8">
       <form id="co2Form" class="space-y-4">
@@ -82,6 +156,14 @@
           Calculate CO2 Emissions
         </button>
       </form>
+
+      <div id="estimateSection" class="mt-4 pt-4 border-t border-gray-200">
+        <div class="flex justify-between items-center">
+          <h4 class="text-sm font-medium text-gray-700">Estimated Emissions:</h4>
+          <span id="estimatedEmissions" class="text-lg font-bold text-green-600">0.00 kg CO2</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Real-time estimate based on selected transport type and distance</p>
+      </div>
 
       <div id="result" class="mt-6 hidden fade-in">
         <div class="bg-green-50 rounded-md p-4 border border-green-100">
@@ -165,7 +247,7 @@
     <div class="container mx-auto px-4">
       <div class="flex flex-col md:flex-row justify-between items-center">
         <div class="mb-4 md:mb-0">
-    <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+          <p>&copy; 2024 EcoPilot. All rights reserved.</p>
         </div>
         <div>
           <a href="/docs/co2-api.md" class="text-green-400 hover:text-green-300 mr-4">API Documentation</a>
@@ -181,6 +263,98 @@
       document.getElementById('userId').value = localStorage.getItem('ecopilot_userId');
     }
     
+    // Fetch emission factors when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchEmissionFactors();
+    });
+    
+    // Real-time emission calculation
+    const transportTypeSelect = document.getElementById('transportType');
+    const distanceInput = document.getElementById('distance');
+    const estimatedEmissions = document.getElementById('estimatedEmissions');
+    
+    function updateEstimate() {
+      const transportType = transportTypeSelect.value;
+      const distance = parseFloat(distanceInput.value);
+      
+      if (transportType && !isNaN(distance) && distance > 0) {
+        // Use the emission factor for the selected transport type
+        const factors = {
+          car: parseFloat(document.getElementById('factorCar').textContent),
+          plane: parseFloat(document.getElementById('factorPlane').textContent),
+          public: parseFloat(document.getElementById('factorPublic').textContent)
+        };
+        
+        const factor = factors[transportType];
+        const emissions = factor * distance;
+        
+        estimatedEmissions.textContent = `${emissions.toFixed(2)} kg CO2`;
+      } else {
+        estimatedEmissions.textContent = '0.00 kg CO2';
+      }
+    }
+    
+    transportTypeSelect.addEventListener('change', updateEstimate);
+    distanceInput.addEventListener('input', updateEstimate);
+    
+    // Fetch emission factors with cache
+    async function fetchEmissionFactors() {
+      const factorsLoading = document.getElementById('factorsLoading');
+      const factorsContent = document.getElementById('factorsContent');
+      const factorsError = document.getElementById('factorsError');
+      const factorsErrorMessage = document.getElementById('factorsErrorMessage');
+      const cacheTime = document.getElementById('cacheTime');
+      
+      // Show loading
+      factorsLoading.classList.remove('hidden');
+      factorsContent.classList.add('hidden');
+      factorsError.classList.add('hidden');
+      
+      try {
+        // Add a timestamp to ensure the request isn't cached by the browser
+        const response = await fetch(`/api/co2/factors?t=${Date.now()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch emission factors');
+        }
+        
+        // Update the factors display
+        const factors = result.data;
+        document.getElementById('factorCar').textContent = factors.car.toFixed(3);
+        document.getElementById('factorPlane').textContent = factors.plane.toFixed(3);
+        document.getElementById('factorPublic').textContent = factors.public.toFixed(3);
+        
+        // Update cache status
+        const now = new Date();
+        cacheTime.textContent = now.toLocaleTimeString();
+        
+        // Set cache badge based on response header
+        const cacheStatus = document.getElementById('cacheStatus');
+        if (response.headers.get('X-Cache') === 'HIT') {
+          cacheStatus.innerHTML += ' <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">CACHED</span>';
+        } else {
+          cacheStatus.innerHTML += ' <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded">FRESH</span>';
+        }
+        
+        factorsContent.classList.remove('hidden');
+        
+        // Update the estimate if form fields are filled
+        updateEstimate();
+      } catch (error) {
+        factorsErrorMessage.textContent = error.message;
+        factorsError.classList.remove('hidden');
+      } finally {
+        factorsLoading.classList.add('hidden');
+      }
+    }
+    
+    // CO2 Calculator Form Submit
     document.getElementById('co2Form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -303,10 +477,14 @@
             // Extract transport type from type field
             const type = item.type.replace('transport_', '').charAt(0).toUpperCase() + item.type.replace('transport_', '').slice(1);
             
+            // Extract distance from description or use a default
+            const distanceMatch = item.description && item.description.match(/\d+(\.\d+)? km/);
+            const distance = distanceMatch ? distanceMatch[0] : 'N/A';
+            
             row.innerHTML = `
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${type}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.description.match(/\d+(\.\d+)? km/)[0]}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${distance}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${item.co2Impact.toFixed(2)} kg</td>
             `;
             
@@ -324,17 +502,6 @@
         historyLoading.classList.add('hidden');
       }
     }
-
-    // Check if user is an admin
-    document.addEventListener('DOMContentLoaded', () => {
-      const token = localStorage.getItem('token');
-      const userRole = localStorage.getItem('userRole');
-      
-      // Show admin link if user has admin role
-      if (token && userRole === 'admin') {
-        document.getElementById('adminLink').classList.remove('hidden');
-      }
-    });
   </script>
 </body>
 </html> 

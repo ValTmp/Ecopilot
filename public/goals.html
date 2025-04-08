@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CO2 Reduction Goals - EcoPilot</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/goals.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <header class="site-header">
+    <div class="container">
+      <div class="logo">
+        <a href="index.html">
+          <img src="images/logo.png" alt="EcoPilot Logo">
+          <span>EcoPilot</span>
+        </a>
+      </div>
+      
+      <nav class="main-nav">
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="calculator.html">CO2 Calculator</a></li>
+          <li><a href="goals.html" class="active">Goals</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="tips.html">Eco Tips</a></li>
+        </ul>
+      </nav>
+      
+      <div class="user-actions">
+        <div class="notification-wrapper">
+          <button class="notification-btn" id="notificationBtn">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" style="display: none;">0</span>
+          </button>
+          <div class="notification-dropdown" id="notificationDropdown">
+            <div class="notification-header">
+              <h3>Notifications</h3>
+              <button class="view-all-btn">View All</button>
+            </div>
+            <div id="notificationList"></div>
+          </div>
+        </div>
+        <div class="user-menu">
+          <button class="user-menu-btn" id="userMenuBtn">
+            <img src="images/avatar.png" alt="User Avatar">
+            <span>John Doe</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <ul>
+              <li><a href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
+              <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+              <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <section class="hero-section">
+      <div class="container">
+        <div class="hero-content">
+          <h1>CO2 Reduction Goals</h1>
+          <p>Set and track your carbon reduction goals to make a positive impact on the environment.</p>
+        </div>
+      </div>
+    </section>
+    
+    <section class="goals-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Your CO2 Reduction Goals</h2>
+          <button class="btn btn-primary" id="createGoalBtn">
+            <i class="fas fa-plus"></i> Create New Goal
+          </button>
+        </div>
+        
+        <!-- Goal statistics overview -->
+        <div class="stats-container" id="statsContainer">
+          <!-- Will be populated by JavaScript -->
+        </div>
+        
+        <!-- Goals container -->
+        <div class="goals-container" id="goalsContainer">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+    
+    <!-- Create Goal Form Modal -->
+    <div id="createGoalModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeCreateGoalModal">&times;</span>
+        <h2>Create New CO2 Reduction Goal</h2>
+        
+        <form id="createGoalForm" class="create-goal-form">
+          <div class="form-group">
+            <label for="goalType">Goal Type</label>
+            <select id="goalType" name="type" required>
+              <option value="">-- Select Goal Type --</option>
+              <option value="overall_reduction">Overall CO2 Reduction</option>
+              <option value="transport_reduction">Transport Emissions Reduction</option>
+              <option value="custom">Custom Goal</option>
+            </select>
+          </div>
+          
+          <div class="form-group transport-options" style="display: none;">
+            <label for="transportType">Transport Type</label>
+            <select id="transportType" name="transportType">
+              <option value="">-- All Transport Types --</option>
+              <option value="car">Car</option>
+              <option value="plane">Plane</option>
+              <option value="public">Public Transport</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="target">Target Reduction (%)</label>
+            <input type="number" id="target" name="target" min="1" max="100" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="deadline">Deadline</label>
+            <input type="date" id="deadline" name="deadline" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3" placeholder="Describe your goal..."></textarea>
+          </div>
+          
+          <button type="submit" class="form-submit">Create Goal</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="images/logo.png" alt="EcoPilot Logo">
+          <span>EcoPilot</span>
+        </div>
+        
+        <div class="footer-links">
+          <div class="footer-column">
+            <h3>Company</h3>
+            <ul>
+              <li><a href="about.html">About Us</a></li>
+              <li><a href="contact.html">Contact</a></li>
+              <li><a href="careers.html">Careers</a></li>
+            </ul>
+          </div>
+          
+          <div class="footer-column">
+            <h3>Resources</h3>
+            <ul>
+              <li><a href="blog.html">Blog</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+              <li><a href="support.html">Support</a></li>
+            </ul>
+          </div>
+          
+          <div class="footer-column">
+            <h3>Legal</h3>
+            <ul>
+              <li><a href="privacy.html">Privacy Policy</a></li>
+              <li><a href="terms.html">Terms of Service</a></li>
+              <li><a href="cookies.html">Cookie Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="footer-social">
+          <h3>Follow Us</h3>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>&copy; 2023 EcoPilot. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Scripts -->
+  <script src="js/main.js"></script>
+  <script src="js/goalManager.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set minimum date for deadline (tomorrow)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('deadline').min = tomorrow.toISOString().split('T')[0];
+      
+      // Load and display goals
+      const goalsContainer = document.getElementById('goalsContainer');
+      GoalManager.loadAndDisplayGoals(goalsContainer);
+      
+      // Load and display goal statistics
+      const statsContainer = document.getElementById('statsContainer');
+      GoalManager.loadAndDisplayGoalStats(statsContainer);
+      
+      // Update notification badge
+      GoalManager.updateNotificationBadge();
+      
+      // Load notifications for dropdown
+      const notificationList = document.getElementById('notificationList');
+      GoalManager.loadAndDisplayNotifications(notificationList, false);
+      
+      // Create Goal Modal
+      const createGoalModal = document.getElementById('createGoalModal');
+      const createGoalBtn = document.getElementById('createGoalBtn');
+      const closeCreateGoalModal = document.getElementById('closeCreateGoalModal');
+      
+      createGoalBtn.addEventListener('click', function() {
+        createGoalModal.style.display = 'flex';
+      });
+      
+      closeCreateGoalModal.addEventListener('click', function() {
+        createGoalModal.style.display = 'none';
+      });
+      
+      // Close modal when clicking outside
+      window.addEventListener('click', function(event) {
+        if (event.target === createGoalModal) {
+          createGoalModal.style.display = 'none';
+        }
+      });
+      
+      // Show/hide transport options based on goal type
+      const goalTypeSelect = document.getElementById('goalType');
+      const transportOptions = document.querySelector('.transport-options');
+      
+      goalTypeSelect.addEventListener('change', function() {
+        if (this.value === 'transport_reduction') {
+          transportOptions.style.display = 'block';
+        } else {
+          transportOptions.style.display = 'none';
+        }
+      });
+      
+      // Handle create goal form submission
+      const createGoalForm = document.getElementById('createGoalForm');
+      
+      createGoalForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(createGoalForm);
+        const goalData = {
+          type: formData.get('type'),
+          target: parseInt(formData.get('target')),
+          deadline: formData.get('deadline'),
+          description: formData.get('description')
+        };
+        
+        // Add custom data if needed
+        if (goalData.type === 'transport_reduction' && formData.get('transportType')) {
+          goalData.customData = {
+            transportType: formData.get('transportType')
+          };
+        }
+        
+        GoalManager.createGoal(goalData)
+          .then(result => {
+            if (result.success) {
+              // Close modal and reset form
+              createGoalModal.style.display = 'none';
+              createGoalForm.reset();
+              
+              // Show success message
+              alert('Goal created successfully!');
+              
+              // Refresh goals and stats
+              GoalManager.loadAndDisplayGoals(goalsContainer);
+              GoalManager.loadAndDisplayGoalStats(statsContainer);
+            }
+          })
+          .catch(error => {
+            alert(`Error: ${error.message}`);
+          });
+      });
+      
+      // Notifications dropdown
+      const notificationBtn = document.getElementById('notificationBtn');
+      const notificationDropdown = document.getElementById('notificationDropdown');
+      
+      notificationBtn.addEventListener('click', function() {
+        notificationDropdown.classList.toggle('show');
+      });
+      
+      // Close notification dropdown when clicking outside
+      window.addEventListener('click', function(event) {
+        if (!event.target.closest('.notification-wrapper') && notificationDropdown.classList.contains('show')) {
+          notificationDropdown.classList.remove('show');
+        }
+      });
+      
+      // User dropdown
+      const userMenuBtn = document.getElementById('userMenuBtn');
+      const userDropdown = document.getElementById('userDropdown');
+      
+      userMenuBtn.addEventListener('click', function() {
+        userDropdown.classList.toggle('show');
+      });
+      
+      // Close user dropdown when clicking outside
+      window.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu') && userDropdown.classList.contains('show')) {
+          userDropdown.classList.remove('show');
+        }
+      });
+      
+      // Mobile menu toggle
+      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+      const mainNav = document.querySelector('.main-nav');
+      
+      mobileMenuToggle.addEventListener('click', function() {
+        mainNav.classList.toggle('show');
+        this.classList.toggle('active');
+      });
+    });
+  </script>
+</body>
+</html> 

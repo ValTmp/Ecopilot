@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoPilot - Carbon Offset</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .eco-gradient {
+      background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+    }
+    .project-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .loading {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <nav class="eco-gradient text-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1 class="text-2xl font-bold">EcoPilot</h1>
+      </div>
+      <div class="flex space-x-2">
+        <a href="/index.html" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          Calculator
+        </a>
+        <a href="/dashboard.html" class="px-4 py-2 bg-white text-green-600 rounded-md font-medium hover:bg-gray-100 transition">
+          Dashboard
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">Carbon Offset</h2>
+      <p class="text-gray-600 max-w-2xl mx-auto">Offset your carbon footprint by investing in environmental projects that reduce greenhouse gas emissions and promote sustainability.</p>
+    </header>
+
+    <!-- User ID and CO2 Amount Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">Offset Your Emissions</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="offsetUserId" class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+          <input type="text" id="offsetUserId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Enter your user ID">
+        </div>
+
+        <div>
+          <label for="offsetAmount" class="block text-sm font-medium text-gray-700 mb-1">CO2 to Offset (kg)</label>
+          <input type="number" id="offsetAmount" min="1" step="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Enter amount to offset">
+        </div>
+      </div>
+      
+      <div class="mt-4">
+        <button id="loadUserDataBtn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+          Load My CO2 Data
+        </button>
+      </div>
+
+      <!-- User data summary -->
+      <div id="userDataSummary" class="mt-6 bg-green-50 rounded-md p-4 hidden">
+        <h4 class="font-medium text-green-800 mb-2">Your Current CO2 Footprint</h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <span class="text-gray-600">Total Emissions:</span>
+            <span id="userTotalEmissions" class="font-bold ml-1">0 kg</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Emissions this month:</span>
+            <span id="userMonthlyEmissions" class="font-bold ml-1">0 kg</span>
+          </div>
+          <div>
+            <span class="text-gray-600">Already Offset:</span>
+            <span id="userOffsetEmissions" class="font-bold ml-1">0 kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="offsetLoading" class="flex justify-center py-8 hidden">
+      <svg class="loading h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+
+    <!-- Error Message -->
+    <div id="offsetError" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-8 hidden">
+      <p id="offsetErrorMessage"></p>
+    </div>
+
+    <!-- Offset Projects -->
+    <div id="offsetProjects" class="mb-8">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">Available Offset Projects</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Reforestation Project -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 project-card">
+          <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&h=300&q=80" 
+               alt="Reforestation Project" 
+               class="w-full h-48 object-cover">
+          <div class="p-6">
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full mb-2">Reforestation</span>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Amazon Rainforest Restoration</h4>
+            <p class="text-gray-600 mb-4">Planting native trees in deforested areas of the Amazon rainforest to restore biodiversity and capture carbon.</p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">$12 per ton CO2</span>
+              <button class="offset-project-btn px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                      data-project="reforestation"
+                      data-price="12">
+                Select
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Solar Energy Project -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 project-card">
+          <img src="https://images.unsplash.com/photo-1509391366360-2e959784a276?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&h=300&q=80" 
+               alt="Solar Energy Project" 
+               class="w-full h-48 object-cover">
+          <div class="p-6">
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full mb-2">Renewable Energy</span>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Community Solar Initiative</h4>
+            <p class="text-gray-600 mb-4">Building solar farms in developing communities to replace diesel generators and provide clean energy.</p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">$15 per ton CO2</span>
+              <button class="offset-project-btn px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                      data-project="solar"
+                      data-price="15">
+                Select
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Ocean Conservation Project -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden transition duration-300 project-card">
+          <img src="https://images.unsplash.com/photo-1518399681705-1c1a55e5e883?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=500&h=300&q=80" 
+               alt="Ocean Conservation Project" 
+               class="w-full h-48 object-cover">
+          <div class="p-6">
+            <span class="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full mb-2">Ocean Conservation</span>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Blue Carbon Restoration</h4>
+            <p class="text-gray-600 mb-4">Restoring and protecting mangrove ecosystems that efficiently sequester carbon and protect coastal areas.</p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">$18 per ton CO2</span>
+              <button class="offset-project-btn px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                      data-project="ocean"
+                      data-price="18">
+                Select
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Offset Checkout -->
+    <div id="offsetCheckout" class="bg-white rounded-lg shadow-md p-6 hidden">
+      <h3 class="text-xl font-bold text-gray-800 mb-4">Complete Your Carbon Offset</h3>
+      
+      <div class="mb-6">
+        <div class="flex items-center bg-green-50 p-4 rounded-md mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p class="font-medium" id="selectedProjectName">Amazon Rainforest Restoration</p>
+            <div class="text-sm text-gray-600">Selected project for your carbon offset</div>
+          </div>
+        </div>
+        
+        <div class="border-t border-gray-200 pt-4">
+          <div class="flex justify-between mb-2">
+            <span class="text-gray-600">CO2 to offset:</span>
+            <span id="checkoutCO2Amount" class="font-medium">0 kg</span>
+          </div>
+          
+          <div class="flex justify-between mb-2">
+            <span class="text-gray-600">Price per ton CO2:</span>
+            <span id="checkoutPricePerTon" class="font-medium">$0.00</span>
+          </div>
+          
+          <div class="flex justify-between font-bold text-lg border-t border-gray-200 pt-2 mt-2">
+            <span>Total Amount:</span>
+            <span id="checkoutTotalAmount" class="text-green-600">$0.00</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment Form -->
+      <form id="paymentForm" class="space-y-4">
+        <div>
+          <label for="cardName" class="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+          <input type="text" id="cardName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="John Doe">
+        </div>
+        
+        <div>
+          <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+          <input type="text" id="cardNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="4242 4242 4242 4242">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="cardExpiry" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+            <input type="text" id="cardExpiry" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="MM/YY">
+          </div>
+          
+          <div>
+            <label for="cardCVC" class="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+            <input type="text" id="cardCVC" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="123">
+          </div>
+        </div>
+        
+        <div class="pt-4">
+          <button type="submit" class="w-full py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition">
+            Complete Offset Payment
+          </button>
+        </div>
+        
+        <div class="text-center pt-2">
+          <button type="button" id="cancelCheckout" class="text-gray-500 hover:text-gray-700 text-sm">
+            Cancel and go back
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Success Message -->
+    <div id="offsetSuccess" class="bg-green-50 border border-green-200 rounded-lg p-6 text-center hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-green-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <h3 class="text-xl font-bold text-green-800 mb-2">Thank You For Your Contribution!</h3>
+      <p class="text-gray-600 mb-6" id="successMessage">You have successfully offset 0 kg of CO2 by supporting the Amazon Rainforest Restoration project.</p>
+      <div class="space-x-4">
+        <a href="/dashboard.html" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+          View Dashboard
+        </a>
+        <a href="/index.html" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
+          Back to Calculator
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-gray-800 text-white py-6 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p>&copy; 2024 EcoPilot. All rights reserved.</p>
+        </div>
+        <div>
+          <a href="/docs/co2-api.md" class="text-green-400 hover:text-green-300 mr-4">API Documentation</a>
+          <a href="https://github.com/ValTmp/EcoPilot" class="text-green-400 hover:text-green-300">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Store the last used userId in localStorage
+    if (localStorage.getItem('ecopilot_userId')) {
+      document.getElementById('offsetUserId').value = localStorage.getItem('ecopilot_userId');
+    }
+    
+    // Globals
+    let selectedProject = null;
+    let offsetAmount = 0;
+    
+    // DOM Loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load user data button
+      document.getElementById('loadUserDataBtn').addEventListener('click', () => {
+        const userId = document.getElementById('offsetUserId').value.trim();
+        
+        if (!userId) {
+          alert('Please enter a User ID');
+          return;
+        }
+        
+        localStorage.setItem('ecopilot_userId', userId);
+        fetchUserData(userId);
+      });
+      
+      // Project selection buttons
+      document.querySelectorAll('.offset-project-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          selectProject(button.dataset.project, button.dataset.price, button.closest('.project-card').querySelector('h4').textContent);
+        });
+      });
+      
+      // Cancel checkout button
+      document.getElementById('cancelCheckout').addEventListener('click', () => {
+        document.getElementById('offsetCheckout').classList.add('hidden');
+        document.getElementById('offsetProjects').classList.remove('hidden');
+      });
+      
+      // Payment form submission
+      document.getElementById('paymentForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        processPayment();
+      });
+    });
+    
+    // Fetch user data
+    async function fetchUserData(userId) {
+      const offsetLoading = document.getElementById('offsetLoading');
+      const offsetError = document.getElementById('offsetError');
+      const userDataSummary = document.getElementById('userDataSummary');
+      
+      offsetLoading.classList.remove('hidden');
+      offsetError.classList.add('hidden');
+      userDataSummary.classList.add('hidden');
+      
+      try {
+        const response = await fetch(`/api/co2/history/${userId}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch user data');
+        }
+        
+        // Process and display user data
+        processUserData(data);
+        userDataSummary.classList.remove('hidden');
+        
+        // Auto-fill offset amount with total emissions
+        const totalEmissions = calculateTotalEmissions(data);
+        document.getElementById('offsetAmount').value = Math.round(totalEmissions);
+        
+      } catch (error) {
+        document.getElementById('offsetErrorMessage').textContent = error.message;
+        offsetError.classList.remove('hidden');
+      } finally {
+        offsetLoading.classList.add('hidden');
+      }
+    }
+    
+    // Process user data
+    function processUserData(data) {
+      if (!data || !data.data || !Array.isArray(data.data)) {
+        throw new Error('No data available for this user');
+      }
+      
+      // Calculate total emissions
+      const totalEmissions = calculateTotalEmissions(data);
+      document.getElementById('userTotalEmissions').textContent = `${totalEmissions.toFixed(2)} kg`;
+      
+      // Calculate emissions this month
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      const monthlyEmissions = data.data
+        .filter(item => new Date(item.date) >= monthStart)
+        .reduce((sum, item) => sum + item.co2Impact, 0);
+        
+      document.getElementById('userMonthlyEmissions').textContent = `${monthlyEmissions.toFixed(2)} kg`;
+      
+      // Already offset (this is mocked since we don't have real offset data)
+      document.getElementById('userOffsetEmissions').textContent = '0 kg';
+    }
+    
+    // Calculate total emissions from user data
+    function calculateTotalEmissions(data) {
+      return data.data.reduce((sum, item) => sum + item.co2Impact, 0);
+    }
+    
+    // Select an offset project
+    function selectProject(projectId, pricePerTon, projectName) {
+      selectedProject = {
+        id: projectId,
+        pricePerTon: parseFloat(pricePerTon),
+        name: projectName
+      };
+      
+      offsetAmount = parseFloat(document.getElementById('offsetAmount').value) || 0;
+      
+      if (offsetAmount <= 0) {
+        alert('Please enter a valid amount of CO2 to offset');
+        return;
+      }
+      
+      // Update checkout information
+      document.getElementById('selectedProjectName').textContent = projectName;
+      document.getElementById('checkoutCO2Amount').textContent = `${offsetAmount.toFixed(2)} kg`;
+      document.getElementById('checkoutPricePerTon').textContent = `$${pricePerTon} per ton`;
+      
+      // Calculate total amount (convert kg to tons, then multiply by price)
+      const totalAmount = (offsetAmount / 1000) * selectedProject.pricePerTon;
+      document.getElementById('checkoutTotalAmount').textContent = `$${totalAmount.toFixed(2)}`;
+      
+      // Show checkout, hide projects
+      document.getElementById('offsetProjects').classList.add('hidden');
+      document.getElementById('offsetCheckout').classList.remove('hidden');
+    }
+    
+    // Process payment
+    function processPayment() {
+      // In a real application, you would validate inputs and process payment here
+      
+      // For demo purposes, we'll just show success message
+      const successMessage = document.getElementById('successMessage');
+      successMessage.textContent = `You have successfully offset ${offsetAmount.toFixed(2)} kg of CO2 by supporting the ${selectedProject.name} project.`;
+      
+      document.getElementById('offsetCheckout').classList.add('hidden');
+      document.getElementById('offsetSuccess').classList.remove('hidden');
+      
+      // In a real app, you would also update the user's offset record
+    }
+  </script>
+</body>
+</html> 

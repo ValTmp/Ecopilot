@@ -4,6 +4,8 @@ const logger = require('../services/logger');
 const cache = require('../config/redis');
 const { db, TABLES, FIELDS } = require('../config/database');
 const Joi = require('joi');
+const userService = require('../services/userService');
+const { AppError } = require('./error');
 
 // JWT-Konfiguration
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -196,84 +198,78 @@ const revokeRefreshToken = async (userId) => {
 };
 
 /**
- * Middleware für die Authentifizierung
+ * Middleware to verify JWT token
  */
-const authenticate = async (req, res, next) => {
+const verifyToken = (req, res, next) => {
   try {
-    // @KI-GEN-START [2025-04-06]
-    // Rate limiting: Check if too many authentication attempts
-    const ip = req.ip || req.connection.remoteAddress;
-    const authAttemptsKey = `${AUTH_ATTEMPTS_PREFIX}${ip}`;
-    
-    // Increment the counter for this IP
-    const attempts = await cache.incr(authAttemptsKey);
-    
-    // Set TTL on first attempt
-    if (attempts === 1) {
-      await cache.expire(authAttemptsKey, AUTH_ATTEMPTS_TTL);
-    }
-    
-    // Check if too many attempts
-    if (attempts > MAX_AUTH_ATTEMPTS) {
-      logger.warn(`Rate limit exceeded for IP ${ip}: ${attempts} attempts`);
-      throw new AuthenticationError('Too many attempts');
-    }
-    // @KI-GEN-END
-    
-    // Check for token in Authorization header or cookie
-    let token = null;
-    
-    // Check Authorization header
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
-    }
-    
-    // Check cookie if no token in header
-    if (!token && req.cookies && req.cookies.token) {
-      token = req.cookies.token;
-    }
+    const token = req.headers.authorization?.split(' ')[1];
     
     if (!token) {
-      logger.warn(`Authentication attempt without token`);
-      throw new AuthenticationError('No token provided');
+      throw new AppError('No token provided', 401);
     }
-    
-    // Validate token
-    const decoded = await validateToken(token);
-    
-    // Attach user information to request
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    logger.info(`User ${decoded.id} authenticated successfully`);
+    
     next();
   } catch (error) {
-    next(error);
+    if (error.name === 'JsonWebTokenError') {
+      next(new AppError('Invalid token', 401));
+    } else if (error.name === 'TokenExpiredError') {
+      next(new AppError('Token expired', 401));
+    } else {
+      next(error);
+    }
   }
 };
 
 /**
- * Middleware für die Autorisierung basierend auf Benutzerrollen
- * @param {Array} roles - Erlaubte Rollen
+ * Middleware to check if user has required role
+ * @param {string|string[]} roles - Required role(s)
  */
-const authorize = (roles = []) => {
+const checkRole = (...roles) => {
   return (req, res, next) => {
-    try {
-      if (!req.user) {
-        logger.warn(`Authorization attempt without authentication`);
-        throw new AuthenticationError('Authentication required');
-      }
-      
-      if (roles.length && !roles.includes(req.user.role)) {
-        logger.warn(`User ${req.user.id} attempted to access restricted resource`);
-        throw new AuthenticationError('Insufficient permissions');
-      }
-      
-      logger.info(`User ${req.user.id} authorized for role: ${req.user.role}`);
-      next();
-    } catch (error) {
-      next(error);
+    if (!req.user) {
+      return next(new AppError('User not authenticated', 401));
     }
+
+    if (!roles.includes(req.user.role)) {
+      logger.warn('Unauthorized access attempt', {
+        userId: req.user.id,
+        role: req.user.role,
+        requiredRoles: roles,
+        path: req.path
+      });
+      
+      return next(new AppError('Insufficient permissions', 403));
+    }
+
+    next();
   };
+};
+
+/**
+ * Middleware to check if user is accessing their own resource
+ * @param {string} paramName - Name of the parameter containing the user ID
+ */
+const isOwnerOrAdmin = (req, res, next) => {
+  if (!req.user) {
+    return next(new AppError('User not authenticated', 401));
+  }
+
+  const resourceUserId = req.params.userId || req.body.userId;
+  
+  if (req.user.role === 'admin' || req.user.id === resourceUserId) {
+    next();
+  } else {
+    logger.warn('Unauthorized resource access attempt', {
+      userId: req.user.id,
+      resourceUserId,
+      path: req.path
+    });
+    
+    next(new AppError('Insufficient permissions', 403));
+  }
 };
 
 /**
@@ -443,6 +439,61 @@ const logout = async (req, res, next) => {
   }
 };
 
+/**
+ * Middleware to authenticate users via JWT
+ */
+const authenticateUser = async (req, res, next) => {
+  try {
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Get user from database
+    const user = await getUserById(decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    // Attach user to request object
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.role === 'admin'
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+/**
+ * Middleware to authorize admin users
+ */
+const authorizeAdmin = (req, res, next) => {
+  try {
+    // Check if user exists and is an admin
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin privileges required' });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Authorization error:', error);
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+};
+
 module.exports = {
   generateToken,
   generateRefreshToken,
@@ -450,9 +501,12 @@ module.exports = {
   validateRefreshToken,
   revokeToken,
   revokeRefreshToken,
-  authenticate,
-  authorize,
+  verifyToken,
+  checkRole,
+  isOwnerOrAdmin,
   refreshToken,
   logout,
-  getUserById
+  getUserById,
+  authenticateUser,
+  authorizeAdmin
 }; 
